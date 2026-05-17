@@ -12,7 +12,11 @@ Usage:
         ./redirect_server.py file:///etc/passwd
         ./redirect_server.py file:///proc/self/environ
 
-Then submit http://host.docker.internal:9000/ in the Short-link Generator UI.
+The user who is running this script must be able to make this website public so 
+that the vulnerable server can access it.
+
+An alternate solution is to just create an HTML page that is available somewhere
+on the public internet so that the server can be exploited with a malicious page
 """
 
 import sys

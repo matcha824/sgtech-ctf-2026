@@ -33,13 +33,7 @@ The bypass operates one layer down. Qt's network layer follows HTTP redirects *b
 ./redirect_server.py file:///app/server.py
 ```
 
-It listens on `:9000` and 302s every request to the supplied `file://` URL. In the Short-link Generator UI, submit:
-
-```
-http://host.docker.internal:9000/
-```
-
-(Use whatever hostname is reachable from inside the container — `host.docker.internal` works on Docker Desktop; on a remote box, use the host's public IP.)
+This script would have to be hosting a publically available webpage using the host's public IP in order to work. The participant may use any public hosting solution to exploit the server.
 
 The preview PNG is a screenshot of `/app/server.py`. Right-click → save, or just read it in the page.
 

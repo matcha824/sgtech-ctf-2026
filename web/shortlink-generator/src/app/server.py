@@ -32,7 +32,8 @@ APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 PREVIEW_DIR = "/tmp/previews"
 os.makedirs(PREVIEW_DIR, exist_ok=True)
 
-# TODO(eng): rotate before public launch -- left over from the dev deploy.
+# This is a relatively secure place to store a secret right?
+# Since the user would never be able to get my source code...
 DEPLOY_TOKEN = "sgctf{never_trust_users_with_your_application}"
 
 app = Flask(__name__)

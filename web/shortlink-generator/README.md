@@ -1,8 +1,18 @@
 # CTF Web Challenge
 
-Challenge Name: Short-link Generator
+Challenge Name: Short-link Generator Stage 1
 
 Challenge Description: This website looks helpful, it even takes screenshots of the page so I can share my short-link on my socials and get a nice embeded preview screenshot.
+
+The Flack server is running the Python script at /app/server.py
+Not that this helps you or anything because you probably can't read the source code xD
+
+Challenge Name: Short-link Generator Stage 2
+
+Challenge Description: The developer made a grave error in the healthcheck endpoint as well as the setup of the Docker image by following someone's random guide online.
+
+They have stored some hidden information in /root/flag.txt
+
 
 ## Detailed Description
 
@@ -12,8 +22,9 @@ This thumnail process is cool, it makes the service vulnerable to attack since t
 
 The attack vector will be:
 
-* A vulnerable Flask python instance
-* Privilege escalation in the container to retrieve the flag
+* Use a vulnerable website to PNG library to dump the website's source code
+* Find a privilege escalation because of a vulnerability through the source code
+* Find the flag in the system.
 
 ## Security Vulnerability / Topics Covered
 
