@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="center-text">
+            Symbolic
+        </h1>
+        <h3 class="center-text">
+            The Lightning Quick Expression Solver
+        </h3>
+        <p>
+            Symbolic allows you to quicky solve mathematical expressions. Symbolic uses
+            SymPy to covert your expression and solve for any free variables in the
+            expression.
+            <br><br>
+            Example Input:
+            <br>x**2-y**2-25
+            <br>
+            Example Output:
+            <br>y: sqrt(x**2 - 25), -sqrt(x**2 - 25)
+            <br>x: -sqrt(y**2 + 25), sqrt(y**2 + 25)
+            <br><br>
+            Symbolic requires that the input be all one side of an equality,
+            with the other side equal to 0. Inputs such as x**2-25=0 are not supported.
+            <br>
+            <br>
+            Symbolic supports various mathematic symbols and functions, such as
+            sqrt(), pi, sin, and many more.
+            <a href="https://docs.sympy.org/latest/reference/index.html">See more here</a>
+        </p>
+    </div>
+    <div class="container" id="submission">
+        <label class="center-text" for="submission-box">Enter expression to solve:</label>
+        <div id="submission-box" name="submission-box" contenteditable>x**2-y**2-25</div>
+        <button type="button" onclick="submit()">Submit</button>
+    </div>
+    <div class="container" id="result" hidden>
+        <label class="center-text" for="result-table">Result:</label>
+        <table id="result-table">
+            <tbody id="result-body"></tbody>
+        </table>
+    </div>
+    <div class="container" id="error" hidden>
+        <p class="flex" id="error-box"></p>
+    </div>
+    <script async src="{{ url_for('static', filename='index.js') }}"></script>
+</body>
