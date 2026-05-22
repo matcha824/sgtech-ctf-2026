@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>HelpBot - AcmeCorp Support</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { font-size: 1.4rem; }
+  #chat { border: 1px solid #ccc; border-radius: 6px; padding: 1rem; height: 60vh; overflow-y: auto; background: #fafafa; }
+  .msg { margin-bottom: 0.75rem; padding: 0.5rem 0.75rem; border-radius: 6px; white-space: pre-wrap; word-wrap: break-word; }
+  .user { background: #d6e9ff; text-align: right; }
+  .bot  { background: #eee; }
+  .sys  { background: #fff3cd; color: #664d03; font-style: italic; font-size: 0.9rem; }
+  #form { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+  #input { flex: 1; padding: 0.5rem; font-size: 1rem; }
+  button { padding: 0.5rem 1rem; font-size: 1rem; cursor: pointer; }
+  #meta { font-size: 0.85rem; color: #666; margin-top: 0.5rem; }
+</style>
+</head>
+<body>
+  <h1>HelpBot &middot; AcmeCorp Support</h1>
+  <p>Ask me about AcmeCorp products! (Sessions end after 10 messages.)</p>
+  <div id="chat"></div>
+  <form id="form">
+    <input id="input" autocomplete="off" placeholder="Type a message..." />
+    <button type="submit">Send</button>
+    <button type="button" id="reset">New session</button>
+  </form>
+  <div id="meta"></div>
+
+<script>
+const chat  = document.getElementById('chat');
+const form  = document.getElementById('form');
+const input = document.getElementById('input');
+const meta  = document.getElementById('meta');
+const reset = document.getElementById('reset');
+let sessionId = null;
+
+function add(role, text) {
+  const d = document.createElement('div');
+  d.className = 'msg ' + role;
+  d.textContent = text;
+  chat.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+async function newSession() {
+  const r = await fetch('/session', { method: 'POST' });
+  const j = await r.json();
+  sessionId = j.session_id;
+  chat.innerHTML = '';
+  add('sys', 'New session started. You have ' + j.max_messages + ' messages.');
+  meta.textContent = 'session: ' + sessionId;
+}
+
+reset.addEventListener('click', newSession);
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const text = input.value.trim();
+  if (!text) return;
+  if (!sessionId) await newSession();
+  add('user', text);
+  input.value = '';
+  input.disabled = true;
+  try {
+    const r = await fetch('/chat', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionId, message: text }),
+    });
+    const j = await r.json();
+    add('bot', j.reply);
+    meta.textContent = 'session: ' + sessionId + ' | used ' + j.messages_used + '/' + (j.messages_used + j.messages_remaining);
+    if (j.session_ended) {
+      add('sys', 'Session ended. Click "New session" to start over.');
+      sessionId = null;
+    }
+  } catch (err) {
+    add('sys', 'Error: ' + err);
+  } finally {
+    input.disabled = false;
+    input.focus();
+  }
+});
+
+newSession();
+</script>
+</body>
+</html>
