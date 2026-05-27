@@ -5,7 +5,9 @@ WORKDIR /app
 COPY pyproject.toml uv.lock* ./
 RUN uv sync --frozen --no-dev
 
-COPY static templates app.py flag.txt ./
+COPY static/ static
+COPY templates/ templates
+COPY app.py flag.txt ./
 
 EXPOSE 8080
 
