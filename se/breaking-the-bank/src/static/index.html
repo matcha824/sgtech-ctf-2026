@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NotARealBank Online Banking</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="NotARealBank home">
+        <span class="brand-name">NotARealBank</span>
+      </a>
+      <div class="profile">
+        <button id="profile-button" type="button" class="profile-button" aria-haspopup="true" aria-expanded="false">
+          You
+        </button>
+        <div id="profile-menu" class="profile-menu" hidden>
+          <button type="button">Profile</button>
+          <button type="button">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <nav class="nav" aria-label="Primary navigation">
+      <a href="#">AI Chat Support</a>
+    </nav>
+
+    <main class="shell">
+      <section class="chat-panel" aria-label="Chatbot">
+        <header class="chat-header">
+          <h1>You are talking to Buddy Bot</h1>
+          <div class="chat-actions">
+            <button id="new-chat" type="button" class="secondary-button">New chat</button>
+          </div>
+        </header>
+        <p class="chat-notice">Please don't spam messages :)</p>
+
+        <div id="messages" class="messages" aria-live="polite">
+          <article class="message assistant"><p>Welcome back. I can help with NotARealBank balances, recent transactions, cards, and account policies. What would you like to review?</p></article>
+        </div>
+
+        <form id="chat-form" class="composer">
+          <input id="prompt" type="text" autocomplete="off" maxlength="5000" placeholder="Ask a question..." required>
+          <button id="send" type="submit">Send</button>
+        </form>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
