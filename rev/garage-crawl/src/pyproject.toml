@@ -1,7 +1,7 @@
 [project]
-name = "securerand"
+name = "garage-crawl"
 version = "0.1.0"
-description = "Add your description here"
+description = "CTF challenge - parking ticket reverse engineering"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = []
