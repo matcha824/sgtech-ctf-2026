@@ -16,7 +16,6 @@ overwrite the return address with a NOP sled and shellcode.
 ```
 fuzzy-frame/
 ├── Dockerfile
-├── docker-compose.yml
 ├── challenge/
 │   ├── vuln.c
 │   ├── vuln_redacted.c
