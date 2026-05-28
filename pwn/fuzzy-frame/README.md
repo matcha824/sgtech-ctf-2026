@@ -9,7 +9,7 @@ overwrite the return address with a NOP sled and shellcode.
 - **Flag**: `sgctf-was-here`
 - **Access**: `ssh ctf@<host> -p <port>` (password: `ctf`)
 - **Ports**: 1 (SSH/22)
-- **Container requirement**: run with `--privileged` (to disable ASLR via `/proc`)
+- **Container requirement**: run with `--privileged`
 
 ## Repo layout
 
@@ -36,12 +36,7 @@ fuzzy-frame/
 ### Build
 
 ```bash
-docker compose up -d --build
-```
-
-### Find the port
-```bash
-docker compose ps
+docker build . -t "fuzzy-frame"
 ```
 
 ### Connect

