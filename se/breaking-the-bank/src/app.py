@@ -8,6 +8,7 @@ import socket
 import threading
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -18,6 +19,7 @@ ROOT = Path(__file__).resolve().parent
 ENV_PATH = ROOT / ".env"
 DEFAULT_BASE_URL = "https://integrate.api.nvidia.com/v1"
 DEFAULT_MODEL = "meta/llama-3.2-3b-instruct"
+TURSO_TIMEOUT_SECONDS = 5
 TARGET_FLAG = "sgctf{prompt_injection_can_break_chatbot_privacy}"
 SESSION_TTL_SECONDS = 60 * 60 * 4
 MAX_SESSION_MESSAGES = 20
@@ -58,6 +60,7 @@ def env_int(name: str, default: int) -> int:
 
 
 def apply_runtime_config() -> None:
+    global TURSO_TIMEOUT_SECONDS
     global MAX_PROMPT_CHARS
     global NIM_MAX_TOKENS
     global NIM_TIMEOUT_SECONDS
@@ -68,6 +71,7 @@ def apply_runtime_config() -> None:
     global RESET_LIMIT
     global RESET_WINDOW_SECONDS
 
+    TURSO_TIMEOUT_SECONDS = env_int("TURSO_TIMEOUT_SECONDS", TURSO_TIMEOUT_SECONDS)
     MAX_PROMPT_CHARS = env_int("MAX_PROMPT_CHARS", MAX_PROMPT_CHARS)
     NIM_MAX_TOKENS = env_int("NIM_MAX_TOKENS", NIM_MAX_TOKENS)
     NIM_TIMEOUT_SECONDS = env_int("NIM_TIMEOUT_SECONDS", NIM_TIMEOUT_SECONDS)
@@ -278,6 +282,15 @@ def new_session_id() -> str:
     return secrets.token_urlsafe(32)
 
 
+def new_chat_session(nim_key: str | None = None) -> dict:
+    return {
+        "history": [],
+        "updated_at": time.time(),
+        "chat_calls": 0,
+        "nim_key": nim_key or "",
+    }
+
+
 def prune_sessions(now: float | None = None) -> None:
     now = now or time.time()
     expired = [
@@ -306,10 +319,241 @@ def check_rate_limit(key: str, limit: int, window_seconds: int) -> tuple[bool, i
     return allowed, remaining
 
 
-def call_nim(messages: list[dict]) -> dict:
-    api_key = os.getenv("API_KEY", "")
+def available_nim_keys() -> dict[str, str]:
+    keys = {"primary": os.getenv("API_KEY_PRIMARY", "").strip()}
+    secondary_key = os.getenv("API_KEY_SECONDARY", "").strip()
+    if secondary_key:
+        keys["secondary"] = secondary_key
+    return keys
+
+
+def utc_minute(now: float | None = None) -> str:
+    timestamp = time.gmtime(now or time.time())
+    return time.strftime("%Y%m%d%H%M", timestamp)
+
+
+def turso_base_url() -> str:
+    url = os.getenv("TURSO_DATABASE_URL", "").strip()
+    if url.startswith("libsql://"):
+        url = "https://" + url[len("libsql://") :]
+    return url.rstrip("/")
+
+
+def turso_auth_token() -> str:
+    return os.getenv("TURSO_AUTH_TOKEN", "").strip()
+
+
+def turso_arg(value: object) -> dict:
+    if value is None:
+        return {"type": "null"}
+    if isinstance(value, int):
+        return {"type": "integer", "value": str(value)}
+    if isinstance(value, float):
+        return {"type": "float", "value": str(value)}
+    return {"type": "text", "value": str(value)}
+
+
+def turso_cell_value(cell: object) -> object:
+    if isinstance(cell, dict):
+        if cell.get("type") == "null":
+            return None
+        return cell.get("value")
+    return cell
+
+
+def turso_execute(sql: str, args: list[object] | None = None) -> list[list[object]]:
+    base_url = turso_base_url()
+    token = turso_auth_token()
+    if not base_url or not token:
+        LOG.warning("turso.disabled missing TURSO_DATABASE_URL or TURSO_AUTH_TOKEN")
+        return []
+
+    request_id = secrets.token_hex(4)
+    payload = {
+        "requests": [
+            {
+                "type": "execute",
+                "stmt": {
+                    "sql": sql,
+                    "args": [turso_arg(arg) for arg in (args or [])],
+                },
+            },
+            {"type": "close"},
+        ]
+    }
+    body = json.dumps(payload).encode("utf-8")
+    request = urllib.request.Request(
+        base_url + "/v2/pipeline",
+        data=body,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        start = time.perf_counter()
+        with urllib.request.urlopen(request, timeout=TURSO_TIMEOUT_SECONDS) as response:
+            response_body = response.read()
+        elapsed_ms = int((time.perf_counter() - start) * 1000)
+        data = json.loads(response_body.decode("utf-8"))
+        result = data["results"][0]["response"]["result"]
+        rows = [[turso_cell_value(cell) for cell in row] for row in result.get("rows", [])]
+        LOG.info("turso.query id=%s elapsed_ms=%s rows=%s", request_id, elapsed_ms, len(rows))
+        return rows
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")
+        LOG.warning("turso.http_error id=%s status=%s preview=%r", request_id, exc.code, body[:240])
+    except Exception as exc:
+        LOG.warning("turso.error id=%s error=%s", request_id, exc)
+    return []
+
+
+def turso_init() -> None:
+    turso_execute(
+        """
+        CREATE TABLE IF NOT EXISTS chat_messages (
+            id TEXT PRIMARY KEY,
+            created_at INTEGER NOT NULL,
+            created_minute TEXT NOT NULL,
+            session_id TEXT NOT NULL,
+            nim_key TEXT NOT NULL,
+            message TEXT NOT NULL,
+            user_message TEXT,
+            assistant_response TEXT,
+            status TEXT NOT NULL DEFAULT 'ok',
+            error_message TEXT,
+            finish_reason TEXT,
+            api_attempted INTEGER NOT NULL DEFAULT 0
+        )
+        """
+    )
+    existing_columns = {str(row[1]) for row in turso_execute("PRAGMA table_info(chat_messages)") if len(row) > 1}
+    migrations = {
+        "user_message": "ALTER TABLE chat_messages ADD COLUMN user_message TEXT",
+        "assistant_response": "ALTER TABLE chat_messages ADD COLUMN assistant_response TEXT",
+        "status": "ALTER TABLE chat_messages ADD COLUMN status TEXT NOT NULL DEFAULT 'ok'",
+        "error_message": "ALTER TABLE chat_messages ADD COLUMN error_message TEXT",
+        "finish_reason": "ALTER TABLE chat_messages ADD COLUMN finish_reason TEXT",
+        "api_attempted": "ALTER TABLE chat_messages ADD COLUMN api_attempted INTEGER NOT NULL DEFAULT 0",
+    }
+    for column, sql in migrations.items():
+        if column not in existing_columns:
+            turso_execute(sql)
+    turso_execute("CREATE INDEX IF NOT EXISTS idx_chat_messages_created_at ON chat_messages(created_at)")
+    turso_execute("CREATE INDEX IF NOT EXISTS idx_chat_messages_minute_key ON chat_messages(created_minute, nim_key)")
+
+
+def turso_log_chat_record(
+    session_id: str,
+    nim_key: str,
+    user_message: str,
+    assistant_response: str = "",
+    status: str = "ok",
+    error_message: str = "",
+    finish_reason: str = "",
+    api_attempted: bool = False,
+) -> None:
+    now = int(time.time())
+    turso_execute(
+        """
+        INSERT INTO chat_messages (
+            id,
+            created_at,
+            created_minute,
+            session_id,
+            nim_key,
+            message,
+            user_message,
+            assistant_response,
+            status,
+            error_message,
+            finish_reason,
+            api_attempted
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        [
+            secrets.token_urlsafe(18),
+            now,
+            utc_minute(now),
+            session_id,
+            nim_key,
+            user_message,
+            user_message,
+            assistant_response,
+            status,
+            error_message,
+            finish_reason,
+            1 if api_attempted else 0,
+        ],
+    )
+
+
+def turso_recent_counts(window_seconds: int = 60) -> dict[str, int]:
+    cutoff = int(time.time()) - window_seconds
+    rows = turso_execute(
+        """
+        SELECT nim_key, COUNT(*)
+        FROM chat_messages
+        WHERE created_at >= ? AND api_attempted = 1
+        GROUP BY nim_key
+        """,
+        [cutoff],
+    )
+    counts = {"primary": 0, "secondary": 0}
+    for row in rows:
+        if len(row) >= 2 and row[0] in counts:
+            try:
+                counts[row[0]] = int(row[1])
+            except (TypeError, ValueError):
+                counts[row[0]] = 0
+    return counts
+
+
+def tie_break_key(session_id: str) -> str:
+    checksum = sum(session_id.encode("utf-8"))
+    return "secondary" if checksum % 2 else "primary"
+
+
+def choose_nim_key(session_id: str) -> str:
+    keys = available_nim_keys()
+    if not keys.get("primary"):
+        return "primary"
+    if "secondary" not in keys:
+        return "primary"
+
+    counts = turso_recent_counts(60)
+    primary_total = counts.get("primary", 0)
+    secondary_total = counts.get("secondary", 0)
+    if secondary_total < primary_total:
+        chosen = "secondary"
+    elif primary_total < secondary_total:
+        chosen = "primary"
+    else:
+        chosen = tie_break_key(session_id)
+    LOG.info(
+        "nim.key_assign source=chat_messages window_seconds=60 session_id=%s primary_count=%s secondary_count=%s chosen=%s",
+        session_id,
+        primary_total,
+        secondary_total,
+        chosen,
+    )
+    return chosen
+
+
+def resolve_nim_key(key_name: str) -> str:
+    keys = available_nim_keys()
+    if key_name == "secondary" and keys.get("secondary"):
+        return keys["secondary"]
+    return keys.get("primary", "")
+
+
+def call_nim(messages: list[dict], key_name: str) -> dict:
+    api_key = resolve_nim_key(key_name)
     if not api_key:
-        raise RuntimeError("API_KEY is missing. Set it in the environment or .env.")
+        raise RuntimeError("API_KEY_PRIMARY is missing. Set it in the environment or .env.")
 
     base_url = DEFAULT_BASE_URL
     model = DEFAULT_MODEL
@@ -323,8 +567,9 @@ def call_nim(messages: list[dict]) -> dict:
     payload_body = json.dumps(payload).encode("utf-8")
     message_chars = sum(len(message.get("content", "")) for message in messages)
     LOG.info(
-        "nim.request id=%s model=%s base_url=%s message_count=%s message_chars=%s max_tokens=%s timeout_seconds=%s payload_bytes=%s",
+        "nim.request id=%s key=%s model=%s base_url=%s message_count=%s message_chars=%s max_tokens=%s timeout_seconds=%s payload_bytes=%s",
         request_id,
+        key_name,
         model,
         base_url,
         len(messages),
@@ -435,11 +680,9 @@ class CtfHandler(BaseHTTPRequestHandler):
                 self.send_json({"error": "Too many reset requests. Please wait before trying again."}, status=429)
                 return
             with SESSION_LOCK:
-                CHAT_SESSIONS[session_id] = {
-                    "history": [],
-                    "updated_at": time.time(),
-                    "chat_calls": 0,
-                }
+                existing_key = CHAT_SESSIONS.get(session_id, {}).get("nim_key", "primary")
+                CHAT_SESSIONS[session_id] = new_chat_session(existing_key)
+                LOG.info("session.reset id=%s nim_key=%s", session_id, CHAT_SESSIONS[session_id]["nim_key"])
             self.send_json({"ok": True, "session_id": session_id})
             return
 
@@ -459,28 +702,47 @@ class CtfHandler(BaseHTTPRequestHandler):
                 self.send_json({"error": "Message is required.", "session_id": session_id}, status=400)
                 return
             if len(message) > MAX_PROMPT_CHARS:
+                with SESSION_LOCK:
+                    nim_key = CHAT_SESSIONS.get(session_id, {}).get("nim_key", "primary")
+                error_message = f"Messages are limited to {MAX_PROMPT_CHARS} characters."
+                turso_log_chat_record(
+                    session_id,
+                    nim_key,
+                    message,
+                    status="validation_error",
+                    error_message=error_message,
+                )
                 self.send_json(
-                    {"error": f"Messages are limited to {MAX_PROMPT_CHARS} characters.", "session_id": session_id},
+                    {"error": error_message, "session_id": session_id},
                     status=413,
                 )
                 return
 
             with SESSION_LOCK:
                 prune_sessions()
-                session = CHAT_SESSIONS.setdefault(
-                    session_id,
-                    {"history": [], "updated_at": time.time(), "chat_calls": 0},
-                )
+                session = CHAT_SESSIONS.get(session_id)
+                if not session:
+                    session = new_chat_session()
+                    CHAT_SESSIONS[session_id] = session
                 if session.get("chat_calls", 0) >= MAX_SESSION_CHAT_CALLS:
+                    error_message = "This secure chat session has reached its message limit. Start a new chat to continue."
+                    turso_log_chat_record(
+                        session_id,
+                        session.get("nim_key", "primary"),
+                        message,
+                        status="rate_limited",
+                        error_message=error_message,
+                    )
                     self.send_json(
                         {
-                            "error": "This secure chat session has reached its message limit. Start a new chat to continue.",
+                            "error": error_message,
                             "session_id": session_id,
                         },
                         status=429,
                     )
                     return
                 session_history = list(session["history"])
+                nim_key = session.get("nim_key", "")
 
             allowed, _ = check_rate_limit(
                 rate_limit_key("chat", "global"),
@@ -488,19 +750,59 @@ class CtfHandler(BaseHTTPRequestHandler):
                 CHAT_RATE_WINDOW_SECONDS,
             )
             if not allowed:
+                error_message = "Chat rate limit reached. Please wait before trying again."
+                turso_log_chat_record(
+                    session_id,
+                    nim_key,
+                    message,
+                    status="rate_limited",
+                    error_message=error_message,
+                )
                 self.send_json(
-                    {"error": "Chat rate limit reached. Please wait before trying again.", "session_id": session_id},
+                    {"error": error_message, "session_id": session_id},
                     status=429,
                 )
                 return
 
-            reply = call_nim(build_messages(session_history, message))
+            if not nim_key:
+                nim_key = choose_nim_key(session_id)
+                with SESSION_LOCK:
+                    session = CHAT_SESSIONS.get(session_id)
+                    if session:
+                        session["nim_key"] = nim_key
+
+            try:
+                reply = call_nim(build_messages(session_history, message), nim_key)
+            except Exception as exc:
+                LOG.error("chat_error: %s", exc)
+                error_message = "Timeout while connecting to API, please try again"
+                turso_log_chat_record(
+                    session_id,
+                    nim_key,
+                    message,
+                    status="api_error",
+                    error_message=f"{error_message}: {exc}",
+                    api_attempted=True,
+                )
+                self.send_json({"error": error_message, "session_id": session_id}, status=500)
+                return
+
+            turso_log_chat_record(
+                session_id,
+                nim_key,
+                message,
+                assistant_response=reply["content"],
+                status="ok",
+                finish_reason=reply["finish_reason"],
+                api_attempted=True,
+            )
 
             with SESSION_LOCK:
-                session = CHAT_SESSIONS.setdefault(
-                    session_id,
-                    {"history": [], "updated_at": time.time(), "chat_calls": 0},
-                )
+                session = CHAT_SESSIONS.get(session_id)
+                if not session:
+                    session = new_chat_session(nim_key)
+                    CHAT_SESSIONS[session_id] = session
+                session["nim_key"] = session.get("nim_key", nim_key)
                 session["history"].extend(
                     [
                         {"role": "user", "content": message},
@@ -526,16 +828,22 @@ class CtfHandler(BaseHTTPRequestHandler):
 
         with SESSION_LOCK:
             prune_sessions()
-            if not session_id or session_id not in CHAT_SESSIONS:
-                session_id = new_session_id()
-                CHAT_SESSIONS[session_id] = {
-                    "history": [],
-                    "updated_at": time.time(),
-                    "chat_calls": 0,
-                }
-                is_new = True
-            else:
+            if session_id and session_id in CHAT_SESSIONS:
                 CHAT_SESSIONS[session_id]["updated_at"] = time.time()
+                return session_id, is_new
+
+        if not session_id:
+            session_id = new_session_id()
+
+        with SESSION_LOCK:
+            prune_sessions()
+            if session_id and session_id in CHAT_SESSIONS:
+                CHAT_SESSIONS[session_id]["updated_at"] = time.time()
+                return session_id, is_new
+
+            CHAT_SESSIONS[session_id] = new_chat_session()
+            is_new = True
+            LOG.info("session.create id=%s", session_id)
 
         return session_id, is_new
 
@@ -598,10 +906,14 @@ def main() -> int:
         format="%(asctime)s %(levelname)s %(name)s %(message)s",
     )
     apply_runtime_config()
+    turso_init()
     host = os.getenv("HOST", "127.0.0.1")
     port = int(os.getenv("PORT", "8080"))
     server = ThreadingHTTPServer((host, port), CtfHandler)
+    nim_keys = available_nim_keys()
     print(f"Buddy Bot running at http://{host}:{port}")
+    print(f"Primary API key set: {'yes' if bool(nim_keys.get('primary')) else 'no'}")
+    print(f"Secondary API key set: {'yes' if bool(nim_keys.get('secondary')) else 'no'}")
     print("Press Ctrl+C to stop.")
     try:
         server.serve_forever()

@@ -5,8 +5,12 @@ services:
     ports:
       - "8080:8080"
     environment:
-      API_KEY: ${API_KEY:?Set API_KEY in your shell or an env file}
+      API_KEY_PRIMARY: ${API_KEY_PRIMARY:?Set API_KEY_PRIMARY in your shell or an env file}
+      API_KEY_SECONDARY: ${API_KEY_SECONDARY:?Set API_KEY_SECONDARY in your shell or an env file}
+      TURSO_DATABASE_URL: ${TURSO_DATABASE_URL:?Set TURSO_DATABASE_URL in your shell or an env file}
+      TURSO_AUTH_TOKEN: ${TURSO_AUTH_TOKEN:?Set TURSO_AUTH_TOKEN in your shell or an env file}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      TURSO_TIMEOUT_SECONDS: ${TURSO_TIMEOUT_SECONDS:-5}
       NIM_MAX_TOKENS: ${NIM_MAX_TOKENS:-500}
       NIM_TIMEOUT_SECONDS: ${NIM_TIMEOUT_SECONDS:-30}
       MAX_PROMPT_CHARS: ${MAX_PROMPT_CHARS:-5000}

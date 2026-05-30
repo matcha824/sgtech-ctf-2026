@@ -18,7 +18,7 @@ None
 From `src/`, run:
 
 ```bash
-API_KEY="api_key" docker compose up --build
+API_KEY_PRIMARY="" API_KEY_SECONDARY="" TURSO_DATABASE_URL="" TURSO_AUTH_TOKEN="" docker compose up --build
 ```
 
 The app listens on port `8080`.
