@@ -26,7 +26,6 @@ def is_ip_address_in_cidr_block(ip_address, cidr_block):
     """
 
     ip_address_split = ip_address.split(".")
-    print("ip_address_split", ip_address_split)
 
     ip_address_bin = []
     for byte in ip_address_split:
@@ -36,10 +35,7 @@ def is_ip_address_in_cidr_block(ip_address, cidr_block):
         for bit in byte_bin:
             ip_address_bin.append(bit)
 
-    print("ip_address_bin", ip_address_bin)
-
     cidr_block_split = cidr_block.replace("/", ".").split(".")
-    print("cidr_block_split", cidr_block_split)
 
     cidr_block_split_bin = []
     for byte in cidr_block_split[:-1]:
@@ -49,10 +45,11 @@ def is_ip_address_in_cidr_block(ip_address, cidr_block):
         for bit in byte_bin:
             cidr_block_split_bin.append(bit)
 
-    print("cidr_block_split_bin", cidr_block_split_bin)
-
     prefix_length = int(cidr_block_split[-1])
-    for i in range(prefix_length):
+    check_length = (
+        prefix_length if prefix_length % 8 != 0 else min(prefix_length + 1, 32)  # bug
+    )
+    for i in range(check_length):
         if ip_address_bin[i] != cidr_block_split_bin[i]:
             return False
     return True
