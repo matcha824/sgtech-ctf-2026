@@ -15,13 +15,13 @@ Put those letters in order of the associated posts to form the flag.
 
 Our hapless victim has accidentally revealed his location with his first post. Which city is he in?
 
-1: _ _ _&nbsp;&nbsp;_ _ * _ _
+1: _ _ _ &nbsp;&nbsp;_ _ * _ _
 
 ### [Post 2](https://bsky.app/profile/sgtdead-reckoning.bsky.social/post/3mn4jlo5stn2v)
 
 His second post’s caption also contains a clue to his location. This question is a little harder-which street are these cars on?
 
-2: _ _ _ _ * _ _  _ _
+2: _ _ _ _ * _ _ &nbsp;&nbsp;_ _
 
 ### [Post 3](https://bsky.app/profile/sgtdead-reckoning.bsky.social/post/3mn4jollsjk2c)
 
@@ -39,4 +39,4 @@ What was his flight number (2 letters 3 numbers)? Note: This requires you to hav
 
 What’s his next stop?
 
-5: _ _  _ _ _ _ _ _ _ _ * 
+5: _ _ &nbsp;&nbsp;_ _ _ _ _ _ _ _ * 
