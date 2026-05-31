@@ -22,3 +22,14 @@ API_KEY_PRIMARY="" API_KEY_SECONDARY="" TURSO_DATABASE_URL="" TURSO_AUTH_TOKEN="
 ```
 
 The app listens on port `8080`.
+
+To package deployment credentials into the image:
+
+```bash
+docker build \
+  --build-arg API_KEY_PRIMARY="$API_KEY_PRIMARY" \
+  --build-arg API_KEY_SECONDARY="$API_KEY_SECONDARY" \
+  --build-arg TURSO_DATABASE_URL="$TURSO_DATABASE_URL" \
+  --build-arg TURSO_AUTH_TOKEN="$TURSO_AUTH_TOKEN" \
+  -t breaking-the-bank src/
+```
