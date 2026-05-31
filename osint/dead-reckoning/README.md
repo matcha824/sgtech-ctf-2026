@@ -15,7 +15,7 @@ Put those letters in order of the associated posts to form the flag.
 
 Our hapless victim has accidentally revealed his location with his first post. Which city is he in?
 
-1: _ _ _  _ _ * _ _
+1: _ _ _&nbsp;&nbsp;_ _ * _ _
 
 ### [Post 2](https://bsky.app/profile/sgtdead-reckoning.bsky.social/post/3mn4jlo5stn2v)
 
