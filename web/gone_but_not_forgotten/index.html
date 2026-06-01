@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlagForum - CTF Discussions</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app-container">
+  <aside class="sidebar">
+    <div class="sidebar-brand">FlagForum</div>
+    <nav class="sidebar-nav">
+      <button class="nav-btn btn-primary" onclick="openCreatePostModal()">Create Post</button>
+      <button class="nav-btn btn-secondary" onclick="openNotesModal()">Write Notes</button>
+    </nav>
+  </aside>
+  <main class="content-area">
+    <header>
+      <h1>CTF Community Forum</h1>
+      <p>Discuss challenges, share tips, and find flags.</p>
+    </header>
+    <div class="post">
+      <div class="post-header"><span class="author">connorwhitlow</span><span class="timestamp">Today at 10:00 AM</span></div>
+      <div class="post-content"><p>Welcome to version 2.0 of our site! We are happy to announce users can now create posts and write notes again! However, we have disabled the retrieval of your previous notes due to a bug reported by one of our users.</p></div>
+    </div>
+    <div class="post">
+      <div class="post-header"><span class="author">ctf-player2</span><span class="timestamp">Today at 11:42 AM</span></div>
+      <div class="post-content"><p>This website is a joke! I don't think Create Post or Write Notes even do anything. At least before the update, it was actually loading my previous notes. Why did you get rid of your only functional feature?</p></div>
+    </div>
+    <div class="post">
+      <div class="post-header"><span class="author">ctf-player3</span><span class="timestamp">Today at 1:15 PM</span></div>
+      <div class="post-content"><p>This new site is even worse! Are you seeing why people barely host sites on S3 now???</p></div>
+    </div>
+  </main>
+</div>
+
+<!-- Create Post Modal -->
+<div class="modal-overlay" id="createPostModal">
+  <div class="modal">
+    <h2>Create Post</h2>
+    <p class="modal-sub">Share a tip, ask a question, or start a discussion.</p>
+    <label for="postTitle">Title</label>
+    <input type="text" id="postTitle" placeholder="e.g. Stuck on the binary challenge...">
+    <label for="postBody">Body</label>
+    <textarea id="postBody" placeholder="Write your post here..."></textarea>
+    <div class="modal-actions">
+      <button class="btn-save" onclick="submitPost()">Submit</button>
+      <button class="btn-close" onclick="closeCreatePostModal()">Cancel</button>
+    </div>
+    <div class="review-banner" id="reviewBanner">
+      <strong>Submitted!</strong> Your post is under review by our admin and will be published if approved. This usually takes 24–48 hours.
+    </div>
+  </div>
+</div>
+
+<!-- Notes Modal -->
+<div class="modal-overlay" id="notesModal">
+  <div class="modal">
+    <h2>📝 My Notes</h2>
+    <textarea id="noteText" placeholder="Write your notes here..."></textarea>
+    <div class="modal-actions">
+      <button class="btn-save" onclick="alert('Submitted succesfully! This will be added to your notes after approval by our admins')">Save Note</button>
+      <button class="btn-close" onclick="closeNotesModal()">Close</button>
+    </div>
+    <div class="previous-notes">
+      <h3>— Previous Notes —</h3>
+      <div id="notesContainer"><span class="notes-loading">This feature is temporarily disabled.</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const CURRENT_USER_ID = "ctf-player";
+
+  // Create Post
+  function openCreatePostModal() {
+    document.getElementById("postTitle").value = "";
+    document.getElementById("postBody").value = "";
+    document.getElementById("reviewBanner").classList.remove("visible");
+    document.getElementById("createPostModal").classList.add("open");
+  }
+
+  function closeCreatePostModal() {
+    document.getElementById("createPostModal").classList.remove("open");
+  }
+
+  function submitPost() {
+    const title = document.getElementById("postTitle").value.trim();
+    const body = document.getElementById("postBody").value.trim();
+    if (!title && !body) return;
+    document.getElementById("reviewBanner").classList.add("visible");
+  }
+
+  document.getElementById("createPostModal").addEventListener("click", function(e) {
+    if (e.target === this) closeCreatePostModal();
+  });
+
+  // Notes
+  function openNotesModal() {
+    document.getElementById("notesModal").classList.add("open");
+    //fetchNotes(CURRENT_USER_ID);
+  }
+
+  function closeNotesModal() {
+    document.getElementById("notesModal").classList.remove("open");
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  document.getElementById("notesModal").addEventListener("click", function(e) {
+    if (e.target === this) closeNotesModal();
+  });
+</script>
+</body>
+<!-- NOTE: run aws s3 sync . s3://gone-but-not-forgotten-195729561860-us-east-1-an to upload changes-->
+</html>
