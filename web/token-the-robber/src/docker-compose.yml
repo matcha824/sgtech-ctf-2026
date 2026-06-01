@@ -1,0 +1,8 @@
+services:
+  token-the-robber:
+    build: .
+    image: token-the-robber:latest
+    container_name: token-the-robber
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
