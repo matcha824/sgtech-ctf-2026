@@ -1,5 +1,5 @@
 # Name
-Vignére Abroad
+Vigenére Abroad
 
 # Flag
 Contained in `solve/flag.txt`
