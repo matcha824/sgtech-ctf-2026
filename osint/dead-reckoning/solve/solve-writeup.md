@@ -30,3 +30,9 @@ Solution: Looking up flights from O’Hare to Lisbon on FlightAware only reveals
 Answer: Av Repúblic*a*
 
 Solution: The question should clue the viewer in that he is on some sort of public transit. Looking up CARRIS Wi-Fi will reveal that he’s on the Carris bus system. Looking up “Carris Saldanha” will reveal that the next stop on any route from the airport is Av Republica.
+
+
+### Post 6:
+Answer: Cor*v*o
+
+Solution: The ticket shows the ferry company, date, boarding time, pier, and departure port, but the destination is hidden. Players use the departure port and ferry schedule on the ferry company site to determine that the route leads to Corvo.

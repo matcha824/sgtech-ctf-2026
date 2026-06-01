@@ -5,6 +5,8 @@ Dead Reckoning
 
 This challenge is structured around a series of BlueSky posts under the handle [sgtdead-reckoning.bsky.social](https://bsky.app/profile/sgtdead-reckoning.bsky.social).
 
+You will be tracking the location of the person making the posts based on the content of those posts.
+
 Each post has an associated question and a string of _'s and one * representing the answer. For each question, get the letter of the answer that matches the position of the *.
 
 For example, if the answer is "Python" and the string is _ * _ _ _ _, the letter for the flag would be "y".
@@ -39,4 +41,10 @@ What was his flight number (2 letters 3 numbers)? Note: This requires you to hav
 
 What’s his next stop?
 
-5: _ _ &nbsp;&nbsp;_ _ _ _ _ _ _ _ * 
+5: _ _ &nbsp;&nbsp;_ _ _ _ _ _ _ _ *
+
+### [Post 6](https://bsky.app/profile/sgtdead-reckoning.bsky.social/post/3mn6yjzttec2u)
+
+Which island is he travelling to?
+
+6: _ _ _ * _
