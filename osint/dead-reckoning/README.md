@@ -1,6 +1,9 @@
 # Name
 Dead Reckoning
 
+# Flag
+Submit as `sgctf{LETTERS FROM ANSWERS (AS OUTLINED BELOW) (ALL CAPS)}`
+
 # Message
 
 This challenge is structured around a series of BlueSky posts under the handle [sgtdead-reckoning.bsky.social](https://bsky.app/profile/sgtdead-reckoning.bsky.social).
