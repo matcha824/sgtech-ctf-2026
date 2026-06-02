@@ -3,17 +3,27 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>NotARealBank Online Banking</title>
+    <title>NotARealBank</title>
     <link rel="stylesheet" href="style.css">
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href="/" aria-label="NotARealBank home">
-        <span class="brand-name">NotARealBank</span>
-      </a>
+      <div class="brand" aria-label="NotARealBank">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M3 9h18L12 4 3 9Zm2 2v7m4-7v7m6-7v7m4-7v7M3 20h18"/>
+          </svg>
+        </span>
+        <span>
+          <span class="brand-name">NotARealBank</span>
+          <span class="brand-tagline">Personal Banking</span>
+        </span>
+      </div>
       <div class="profile">
         <button id="profile-button" type="button" class="profile-button" aria-haspopup="true" aria-expanded="false">
-          You
+          <span class="profile-avatar" aria-hidden="true">H</span>
+          <span>You</span>
+          <span class="profile-chevron" aria-hidden="true"></span>
         </button>
         <div id="profile-menu" class="profile-menu" hidden>
           <button type="button">Profile</button>
@@ -23,26 +33,39 @@
     </header>
 
     <nav class="nav" aria-label="Primary navigation">
-      <a href="#">AI Chat Support</a>
+      <div>
+        <p class="eyebrow">Support center</p>
+        <h2>AI Chat Support</h2>
+      </div>
+      <span class="nav-status">Need help? Chat with us.</span>
     </nav>
 
     <main class="shell">
       <section class="chat-panel" aria-label="Chatbot">
         <header class="chat-header">
-          <h1>You are talking to Buddy Bot</h1>
+          <div class="chat-agent">
+            <span class="agent-avatar" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path class="bot-shell" d="M7 6.5h10a3 3 0 0 1 3 3v7.5a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V9.5a3 3 0 0 1 3-3Z"/>
+                <path class="bot-detail" d="M12 6.5V4.5m0 0h.01M8 12h.01M16 12h.01M8.5 15c1 1.25 2.15 1.8 3.5 1.8S14.5 16.25 15.5 15"/>
+              </svg>
+            </span>
+            <div>
+              <h1>Buddy Bot</h1>
+              <p><span aria-hidden="true"></span> Online</p>
+            </div>
+          </div>
           <div class="chat-actions">
             <button id="new-chat" type="button" class="secondary-button">New chat</button>
           </div>
         </header>
-        <p class="chat-notice">Please don't spam messages :)</p>
-
         <div id="messages" class="messages" aria-live="polite">
-          <article class="message assistant"><p>Welcome back. I can help with NotARealBank balances, recent transactions, cards, and account policies. What would you like to review?</p></article>
+          <article class="message assistant"><p>Welcome back, Hue Man! I can help with your NotARealBank balances, recent transactions, cards, and account policies. What would you like to review today?</p></article>
         </div>
 
         <form id="chat-form" class="composer">
-          <input id="prompt" type="text" autocomplete="off" maxlength="5000" placeholder="Ask a question..." required>
-          <button id="send" type="submit">Send</button>
+          <input id="prompt" type="text" autocomplete="off" maxlength="5000" placeholder="Ask Buddy Bot a question..." required>
+          <button id="send" type="submit" aria-label="Send message">Send</button>
         </form>
       </section>
     </main>
