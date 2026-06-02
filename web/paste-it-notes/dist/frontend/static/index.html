@@ -1,0 +1,73 @@
+<html>
+  <head>
+    <title>Paste-it Note</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Paste-it Note</h1>
+      <h3>Create a temporary paste. Share with your friends.</h3>
+    </div>
+    <div class="forms-container">
+      <form id="pasteForm" class="panel-form">
+        <h2>Create Paste</h2>
+        <div
+          id="contents"
+          class="editor"
+          contenteditable="true"
+          data-placeholder="Enter your note here"
+        ></div>
+        <button type="submit">Create Paste</button>
+      </form>
+      <form id="searchForm" class="panel-form search-form">
+        <h2>Search Paste</h2>
+        <input
+          id="searchid"
+          class="search-input"
+          type="text"
+          name="id"
+          placeholder="Enter a known id"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button type="submit">Find Paste</button>
+      </form>
+    </div>
+    <div class="container" id="response" hidden>
+      <section id="responseCard" class="response-card" hidden>
+        <div class="response-header">
+          <span id="responseStatus" class="response-status"></span>
+        </div>
+        <p id="responseNotice" class="response-notice" hidden></p>
+        <div id="idBlock" class="id-block" hidden>
+          <span class="id-label">id</span>
+          <code id="responseid"></code>
+        </div>
+        <div id="pasteLinkBlock" class="paste-link-block" hidden>
+          <span class="id-label">Link to paste</span>
+          <a id="pastePageLink" class="paste-page-link" href="#"></a>
+        </div>
+        <dl id="searchDetails" class="response-details" hidden>
+          <div class="response-row stacked-row">
+            <dt class="contents-heading">
+              <span>Contents</span>
+              <span id="searchTimestamp" class="timestamp-value"></span>
+            </dt>
+            <dd><pre id="searchContents" class="content-block"></pre></dd>
+          </div>
+        </dl>
+        <dl id="errorDetails" class="response-details" hidden></dl>
+        <div
+          id="responseActions"
+          class="response-actions is-hidden"
+          aria-hidden="true"
+        >
+          <button id="deletePasteButton" class="danger-button" type="button">
+            Delete Paste
+          </button>
+        </div>
+      </section>
+    </div>
+    <script type="module" src="index.js"></script>
+  </body>
+</html>

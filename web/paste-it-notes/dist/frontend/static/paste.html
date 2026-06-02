@@ -1,0 +1,45 @@
+<html>
+  <head>
+    <title>Paste-it Note</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Paste-it Note</h1>
+      <h3>Viewing a single paste.</h3>
+      <p><a class="page-link" href="/">Back to home</a></p>
+    </div>
+    <div class="container" id="response">
+      <section id="responseCard" class="response-card" hidden>
+        <div class="response-header">
+          <span id="responseStatus" class="response-status"></span>
+        </div>
+        <p id="responseNotice" class="response-notice" hidden></p>
+        <div id="idBlock" class="id-block" hidden>
+          <span class="id-label">id</span>
+          <code id="responseid"></code>
+        </div>
+        <dl id="searchDetails" class="response-details" hidden>
+          <div class="response-row stacked-row">
+            <dt class="contents-heading">
+              <span>Contents</span>
+              <span id="searchTimestamp" class="timestamp-value"></span>
+            </dt>
+            <dd><pre id="searchContents" class="content-block"></pre></dd>
+          </div>
+        </dl>
+        <dl id="errorDetails" class="response-details" hidden></dl>
+        <div
+          id="responseActions"
+          class="response-actions is-hidden"
+          aria-hidden="true"
+        >
+          <button id="deletePasteButton" class="danger-button" type="button">
+            Delete Paste
+          </button>
+        </div>
+      </section>
+    </div>
+    <script type="module" src="/paste.js"></script>
+  </body>
+</html>
