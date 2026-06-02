@@ -31,3 +31,7 @@ FOUND BUG: 224.148.108.148 in 95.224.200.41/26 - got True, expected False
 The flag is the number that is common among all the failing inputs - 26. The backdoor is that a prefix length of 26 results in the function always outputing `True`, no matter the ip address.
 
 Check out `main.py` to see the source code of `is_ip_address_in_cidr_block`.
+
+## Goal of Challege
+
+The ultimate goal of the challenge was to expose the player to property based testing. Property based testing is a strategy to augment unit testing by making sure code works on 100s of random inputs, rather than a single, static input.
