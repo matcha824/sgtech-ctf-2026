@@ -1,0 +1,9 @@
+services:
+  pathtrav:
+    build: ./src
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+    environment:
+      FLAG: "sgtech{dpop_htu_not_sanitized}"
+    restart: unless-stopped
