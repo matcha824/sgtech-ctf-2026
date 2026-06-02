@@ -55,7 +55,3 @@ def is_ip_address_in_cidr_block(ip_address, cidr_block):
         if ip_address_bin[i] != cidr_block_split_bin[i]:
             return False
     return True
-
-
-print(is_ip_address_in_cidr_block("192.168.0.25", "192.168.0.0/24"))
-print(is_ip_address_in_cidr_block("192.168.1.25", "192.168.0.0/24"))
