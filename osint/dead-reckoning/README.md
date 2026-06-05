@@ -12,9 +12,9 @@ The person making these posts has gotten himself kidnapped on vacation, and it's
 
 You will be tracking the location of the person making the posts based on the content of those posts.
 
-Each post has an associated question and a string of _'s and one * representing the answer. For each question, get the letter of the answer that matches the position of the *.
+Each post has an associated question and a string of _'s and several *'s representing the answer. For each question, get the letters of the answer that matches the position of the *'s.
 
-For example, if the answer is "Python" and the string is _ * _ _ _ _, the letter for the flag would be "y".
+For example, if the answer is "Python" and the string is _ * _ * _ _, the letter for the flag would be "yh".
 
 Put those letters in order of the associated posts to form the flag.
 
