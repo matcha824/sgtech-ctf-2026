@@ -6,7 +6,7 @@ To find potential backdoors, Ember has hired you as a pen tester for Inferno tec
 
 ## Goal
 
-Explore what test cases cause `is_ip_address_in_cidr_block` to deliver incorrect output (`Fals`' when it should output `True` or vice versa). Use the Hypothesis python library. The flag is a number that is common among the failing test cases.
+Explore what test cases cause `is_ip_address_in_cidr_block` to deliver incorrect output (`False` when it should output `True` or vice versa). Use the Hypothesis python library. The flag is a number that is common among the failing test cases.
 
 ## Getting Started
 
