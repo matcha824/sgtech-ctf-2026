@@ -1,6 +1,6 @@
 # Flaming Backdoor - Solution
 
-The strategy is to use the Hypothesis library as a random input generator to the function `is_ip_address_in_cidr_block` and to use an oracle (source of truth) to find inputs that can the function to generate incorrect output. Check out `solution.py` for such an implementation using the `ipaddress` library as an oracle.
+The strategy is to use the Hypothesis library as a random input generator to the function `is_ip_address_in_cidr_block` and to use an oracle (source of truth) to find inputs that result in incorrect output. Check out `solution.py` for such an implementation using the `ipaddress` library as an oracle.
 
 When you run `solution.py`, you get something like the following
 ```
