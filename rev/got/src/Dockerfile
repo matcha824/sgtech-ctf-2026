@@ -8,7 +8,7 @@ RUN useradd -m -s /bin/bash ctf
 
 WORKDIR /home/ctf
 
-COPY src/challenge.c .
+COPY challenge.c .
 COPY Makefile .
 COPY flag.txt .
 

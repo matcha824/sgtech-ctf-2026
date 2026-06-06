@@ -18,7 +18,7 @@ endif
 all: $(BIN)
 
 $(BIN): $(SRC)
-    $(CC) $(CFLAGS) -o $(BIN) $(SRC) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $(BIN) $(SRC) $(LDFLAGS)
 
 clean:
-    rm -f $(BIN)
+	rm -f $(BIN)
