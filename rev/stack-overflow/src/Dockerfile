@@ -13,8 +13,8 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /ctf
 
 # Copy challenge source and build
-COPY src/vuln.c .
-COPY src/Makefile .
+COPY vuln.c .
+COPY Makefile .
 RUN make
 
 # Create the flag
@@ -24,4 +24,4 @@ RUN echo "SGTECHCTF{c4n4ry_byp4ss_pr0}" > flag.txt
 EXPOSE 1337
 
 # Serve the binary over TCP
-CMD ["socat", "TCP-LISTEN:1337,reuseaddr,fork", "EXEC:./vuln,pty,stderr,setsid,sigint,sane"]
+CMD ["socat", "TCP-LISTEN:1337,reuseaddr,fork", "EXEC:./vuln,pty,raw,stderr"]
