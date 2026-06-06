@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define GUARD_VALUE 0xDEADBEEFDEADC0DEULL
+// What does this value represent?
+#define VALUE 0xDEADBEEFDEADC0DEULL
 
 void win()
 {
@@ -21,7 +22,7 @@ void win()
 
 void greet()
 {
-    volatile unsigned long guard = GUARD_VALUE;
+    volatile unsigned long value = VALUE;
     char name[64];
 
     printf("Enter your name: ");
@@ -29,7 +30,7 @@ void greet()
 
     printf("Hello, %s!\n", name);
 
-    if (guard != GUARD_VALUE)
+    if (value != VALUE)
     {
         printf("*** Stack smashing detected ***\n");
         exit(1);
