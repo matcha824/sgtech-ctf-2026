@@ -9,20 +9,24 @@
 
 __Note:__ This is different from a **stack overflow**, which is a condition where the stack pointer exceeds the allocated stack space, causing a crash. Stack overflows typically occur when too many function calls are made, exhausting the stack space.
 
-- Stack Canaries: A **stack canary** is a random value placed on the stack between the buffer and the return address. If the canary is modified, the program will crash before the return address can be overwritten. __Note:__ In this challenge, we give you the canary value, but you have to determine where to place it on the stack.
+- Stack Canaries: A **stack canary** is a random value placed on the stack between the buffer and the return address. If the canary is modified, the program will crash before the return address can be overwritten.
 - Return Address Overwrite: The **return address** is the address of the next instruction to execute after a function returns. If the return address is overwritten, the program will jump to the new address instead of the original one.
 - Function Calls: **Function calls** are used to execute code in a separate function. The return address is pushed onto the stack when a function is called, and popped off the stack when the function returns.
 
 ## Background Information
 
 ### Stack Layout
+To begin, this challenge uses x86-64 architecture. A computer's **architecure** is basically just the standard "language" or blueprint that the vast majority of modern desktop computers, laptops, and servers use to think and execute commands. If you own a Windows PC or an older Mac powered by an Intel or AMD processor, the computer uses x86-64 architecture.
+
 When a function is called on x86-64 architecture, the stack grows downward (toward lower memory addresses). Every time a function is called, it carves out its own private workspace on the stack called a **stack frame**. The layout for a typical function looks like this:
 
+```text
 [Higher addresses]
-  Return address            (8 bytes) - where execution resumes after the function
-  Saved RBP                 (8 bytes) - previous stack frame pointer
-  Local variables           (variable size) - buffers, integers, etc.
+  Return address        (8 bytes) - where execution resumes after the function
+  Saved RBP             (8 bytes) - previous stack frame pointer
+  Local variables       (variable size) - buffers, integers, etc.
 [Lower addresses]
+```
 
 When you overflow a buffer (which sits at a lower address), you write upward through the local variables, past the 
 saved RBP, and into the return address.
@@ -36,11 +40,100 @@ Here's how it all works together:
 Imagine Function A is running, and it calls Function B.
 
 1. The moment Function A calls Function B, the CPU automatically pushes Function A's return address onto the stack. `rsp` moves down to accommodate it.
-2. Function B then starts executing. The very first thing it does is save Function A's `rbp` value (the old base pointer) onto the stack so that it can restore it later. Function A will need this to calculate offsets for its own local variables.
+
+```text
+Before call:
+Stack is empty (or contains previous frame)
+
+After Function A calls Function B:
+
+Higher addresses
+────────────────────────
+Return address (to Function A)
+────────────────────────
+Lower addresses
+RSP ↓ moved down automatically
+```
+
+2. Function B then starts executing. The very first thing it does is save Function A's `rbp` value (the old base pointer) onto the stack so that it can restore it later. Function A will need this to calculate offsets for its own local variables. In simple terms, Function B needs to save the __execution context__ of Function A so that it can be restored when Function B returns.
+
+```text
+Function B begins execution:
+
+Higher addresses
+────────────────────────
+Return address
+Saved RBP (Function A's frame pointer)
+────────────────────────
+Lower addresses
+```
+
+
 3. Now that the old `rbp` is safe, Function B sets its own base pointer anchor by copying the current stack pointer: `mov rbp, rsp`. Now, both `rbp` and `rsp` point to the same location, which is the top of Function B's stack frame.
+
+```text
+Function B establishes its frame:
+
+RBP = RSP (both point here)
+
+Higher addresses
+────────────────────────
+Return address
+Saved RBP
+RBP/RSP → current frame anchor
+────────────────────────
+Lower addresses
+```
+
 4. Function B needs room for its local variables. It creates this space by subtracting from `rsp`: `sub rsp, <size>`. This moves the stack pointer down, allocating space for local variables.
-5. When Function B finishes, it has to clean up and give control back to Function A. This involves moving the stack pointer back to the base pointer and instantly discarding all local variables. It also pops Function A's old base pointer back into `rbp`. Now Function A's anchor is restored
+
+```text
+Stack grows downward:
+
+Higher addresses
+────────────────────────
+Return address
+Saved RBP
+────────────────────────
+Local variables (Function B)
+RSP ↓ moved further down
+RBP stays fixed (anchor point)
+────────────────────────
+Lower addresses
+```
+
+5. When Function B finishes, it has to clean up and give control back to Function A. This involves moving the stack pointer back to the base pointer and instantly discarding all local variables. It also pops Function A's old base pointer back into `rbp`. Now Function A's anchor is restored.
+
+```text
+Cleaning up Function B:
+
+1. RSP ← RBP   (discard locals)
+2. pop saved RBP back into RBP
+
+Higher addresses
+────────────────────────
+Return address
+────────────────────────
+Lower addresses
+RSP and RBP restored to Function A frame
+```
+
 6. Lastly, Function B executes the `ret` instruction, which pops the return address off the stack and jumps the CPU's instruction pointer straight back to Function A's code.
+
+```text
+ret executes:
+
+CPU pops return address → jumps back to Function A
+
+Higher addresses
+────────────────────────
+(return address is popped)
+Stack now back to Function A context
+────────────────────────
+Lower addresses
+```
+
+If you want even more context about how the stack works, you can refer to this [video](https://www.youtube.com/watch?v=u_-oQx_4jvo)
 
 ### Stack Alignment: The 16-Byte Rule
 Modern 64-bit CPUs (x86-64) enforce a rule: The stack pointer (`rsp`) must be aligned to a 16-byte boundary before any `call` instruction is executed. In other words `rsp` % 16 == 0 at the moment a `call` instruction is called. The reason for this is because modern CPUs use special instructions (like AVX or SSE for vector math) that expect data to be neatly lined up in memory blocks divisible by 16. If the data isn't aligned, the CPU has to do extra work, or worse, the program will instantly crash.
@@ -95,5 +188,4 @@ python3 -c "from pwn import *; print(cyclic(100))"
 ```
 
 ## Submitting
-Once you're done crafting your exploit, run the exploit in your container by doing `python3 exploit.py`. If you're 
-successful, you should see the flag printed to the console. Submit it to CTFd challenge website to earn your points.
+Once you're done crafting your exploit, run the exploit in your container by doing `python3 exploit.py`. Make sure that you note down what port the server is running on and use that port. If you're successful, you should see the flag printed to the console. Submit it to CTFd challenge website to earn your points.
