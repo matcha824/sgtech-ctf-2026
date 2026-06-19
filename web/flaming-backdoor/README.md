@@ -14,7 +14,7 @@ Explore what test cases cause `is_ip_address_in_cidr_block` to deliver incorrect
 2. Run `pipenv install` to install all dependencies
 3. Run `pipenv run python experiment.py` and explore / modify the file
 
-Ignore `main.py` and `pyarmor_runtime_000000/*`. This is the obfuscated source code of `is_ip_address_in_cidr_block`.
+Ignore `main.pyc`. This is the compiled source code of `is_ip_address_in_cidr_block`. The code is obfuscated via compilation so that you focus on using Hypothesis to solve the challenge instead of reviewing source code.
 
 ## Learning Goal
 
