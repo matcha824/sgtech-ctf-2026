@@ -3,6 +3,7 @@
 The strategy is to use the Hypothesis library as a random input generator to the function `is_ip_address_in_cidr_block` and to use an oracle (source of truth) to find inputs that result in incorrect output. Check out `solution.py` for such an implementation using the `ipaddress` library as an oracle.
 
 When you run `solution.py`, you get something like the following
+
 ```
 PS C:\Users\navee\Documents\sgtech-ctf-2026\web\pranav-chall> pipenv run python .\solve\solution.py
 FOUND BUG: 224.181.147.84 in 37.68.133.241/26 - got True, expected False
@@ -32,6 +33,6 @@ The flag is the number that is common among all the failing inputs - 26. The bac
 
 Check out `main.py` to see the source code of `is_ip_address_in_cidr_block`.
 
-## Goal of Challege
+## Goal of Challenge
 
 The ultimate goal of the challenge was to expose the player to property based testing. Property based testing is a strategy to augment unit testing by making sure code works on 100s of random inputs, rather than a single, static input.
