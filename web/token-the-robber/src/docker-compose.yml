@@ -4,5 +4,5 @@ services:
     image: token-the-robber:latest
     container_name: token-the-robber
     ports:
-      - "8000:8000"
+      - "8000:80"
     restart: unless-stopped

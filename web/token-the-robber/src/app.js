@@ -1,54 +1,10 @@
 const JWT_SECRET = "ZeroDay";
 const AUTH_STORAGE_KEY = "Authorization";
 
-const USERS = {
-  guest: {
-    password: "ride_the_lightning",
-    tokenPayload: { name: "guest", role: "guest" }
-  }
-};
-
 const loginView = document.getElementById("login-view");
 const dashboardView = document.getElementById("dashboard-view");
 const loginForm = document.getElementById("login-form");
 const loginMessage = document.getElementById("login-message");
-
-function base64UrlEncode(input) {
-  const json = typeof input === "string" ? input : JSON.stringify(input);
-  return btoa(unescape(encodeURIComponent(json)))
-    .replace(/=/g, "")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_");
-}
-
-function base64UrlDecode(input) {
-  const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = normalized + "=".repeat((4 - normalized.length % 4) % 4);
-  return decodeURIComponent(escape(atob(padded)));
-}
-
-async function hmacSha256(message, secret) {
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(message));
-  const bytes = String.fromCharCode(...new Uint8Array(signature));
-  return btoa(bytes).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
-}
-
-async function createJwt(payload) {
-  const header = { alg: "HS256", typ: "JWT" };
-  const encodedHeader = base64UrlEncode(header);
-  const encodedPayload = base64UrlEncode(payload);
-  const signingInput = `${encodedHeader}.${encodedPayload}`;
-  const signature = await hmacSha256(signingInput, JWT_SECRET);
-  return `${signingInput}.${signature}`;
-}
 
 function extractBearerToken(value) {
   if (!value) return null;
@@ -62,24 +18,6 @@ function extractBearerToken(value) {
   return trimmed;
 }
 
-async function verifyJwt(token) {
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return null;
-
-    const [encodedHeader, encodedPayload, signature] = parts;
-    const header = JSON.parse(base64UrlDecode(encodedHeader));
-    if (header.alg !== "HS256") return null;
-
-    const expectedSignature = await hmacSha256(`${encodedHeader}.${encodedPayload}`, JWT_SECRET);
-    if (signature !== expectedSignature) return null;
-
-    return JSON.parse(base64UrlDecode(encodedPayload));
-  } catch (_) {
-    return null;
-  }
-}
-
 function saveAuthorizationHeader(tokenOrHeader) {
   const token = extractBearerToken(tokenOrHeader);
   if (!token) return;
@@ -87,6 +25,10 @@ function saveAuthorizationHeader(tokenOrHeader) {
 }
 
 window.setAuthorizationHeader = saveAuthorizationHeader;
+
+function getAuthorizationHeader() {
+  return localStorage.getItem(AUTH_STORAGE_KEY);
+}
 
 function clearSession() {
   localStorage.removeItem(AUTH_STORAGE_KEY);
@@ -150,9 +92,21 @@ function renderGuestDashboard() {
   `;
 }
 
-function renderAdminDashboard() {
+async function renderAdminDashboard() {
   loginView.classList.add("hidden");
   dashboardView.classList.remove("hidden");
+
+  let flagText = "Access pending";
+  try {
+    const response = await fetch("/api/flag", {
+      headers: { Authorization: getAuthorizationHeader() || "" }
+    });
+    if (response.ok) {
+      const data = await response.json();
+      flagText = data.flag;
+    }
+  } catch (_) {}
+
   dashboardView.innerHTML = `
     <div class="dashboard-header">
       <div>
@@ -175,34 +129,41 @@ function renderAdminDashboard() {
       <p>The new authentication rollout is complete.</p>
       <p><strong>Security Review:</strong> JWT signing key rotation has been postponed for the seventh consecutive quarter.</p>
       <p class="flag-label">Access Code</p>
-      <code>sgctf{gabriel_winter_needs_a_better_jwt_secret}</code>
+      <code>${flagText}</code>
     </section>
   `;
 }
 
 async function renderFromAuthorizationHeader() {
-  const storedHeader = localStorage.getItem(AUTH_STORAGE_KEY);
-  const token = extractBearerToken(storedHeader);
-  if (!token) {
+  const storedHeader = getAuthorizationHeader();
+  if (!storedHeader) {
     renderLogin();
     return;
   }
 
-  const payload = await verifyJwt(token);
-  if (!payload) {
-    renderLogin();
-    return;
-  }
+  try {
+    const response = await fetch("/api/session", {
+      headers: { Authorization: storedHeader }
+    });
 
-  if (payload.name === "admin" && payload.role === "admin") {
-    renderAdminDashboard();
-    return;
-  }
+    if (!response.ok) {
+      renderLogin();
+      return;
+    }
 
-  if (payload.name === "guest" && payload.role === "guest") {
-    renderGuestDashboard();
-    return;
-  }
+    const data = await response.json();
+    const payload = data.user;
+
+    if (payload.name === "admin" && payload.role === "admin") {
+      await renderAdminDashboard();
+      return;
+    }
+
+    if (payload.name === "guest" && payload.role === "guest") {
+      renderGuestDashboard();
+      return;
+    }
+  } catch (_) {}
 
   renderLogin();
 }
@@ -211,16 +172,25 @@ loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value;
-  const user = USERS[username];
 
-  if (!user || user.password !== password) {
+  try {
+    const response = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
+
+    if (!response.ok) {
+      loginMessage.textContent = "Unable to sign in.";
+      return;
+    }
+
+    const data = await response.json();
+    saveAuthorizationHeader(data.authorization);
+    await renderFromAuthorizationHeader();
+  } catch (_) {
     loginMessage.textContent = "Unable to sign in.";
-    return;
   }
-
-  const jwt = await createJwt(user.tokenPayload);
-  saveAuthorizationHeader(jwt);
-  await renderFromAuthorizationHeader();
 });
 
 renderFromAuthorizationHeader();
