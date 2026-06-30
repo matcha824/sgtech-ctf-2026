@@ -1,0 +1,9 @@
+services:
+  chatbot:
+    build: .
+    image: bully-chatbot:latest
+    container_name: bully-chatbot
+    ports:
+      - "8000:8000"
+    mem_limit: 2g
+    restart: unless-stopped
