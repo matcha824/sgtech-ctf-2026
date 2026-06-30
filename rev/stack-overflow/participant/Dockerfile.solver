@@ -1,0 +1,36 @@
+FROM --platform=linux/amd64 ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install build tools, debugging, and exploit development tools
+RUN apt-get update && apt-get install -y \
+    gcc \
+    build-essential \
+    gdb \
+    gdb-multiarch \
+    python3 \
+    python3-pip \
+    netcat-openbsd \
+    wget \
+    file \
+    qemu-user \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python exploit tools
+RUN pip3 install pwntools ropper capstone
+
+# Install checksec
+RUN wget -q https://raw.githubusercontent.com/slimm609/checksec.sh/master/checksec -O /usr/local/bin/checksec \
+    && chmod +x /usr/local/bin/checksec || true
+
+WORKDIR /ctf
+
+# Copy challenge files
+COPY vuln.c .
+COPY Makefile .
+COPY exploit.py .
+
+# Compile the binary inside the container (produces x86-64 ELF)
+RUN make && chmod +x vuln
+
+CMD ["/bin/bash"]
