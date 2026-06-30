@@ -1,0 +1,1 @@
+strings string_cheese | grep sgctf
