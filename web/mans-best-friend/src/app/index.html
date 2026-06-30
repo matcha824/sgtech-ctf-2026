@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>FaceBack - Log In</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #1c1e21;
+            min-height: 100vh;
+        }
+
+        /* -- NAVBAR -- */
+        #navbar {
+            background: #fff;
+            border-bottom: 1px solid #dddfe2;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            height: 56px;
+            gap: 12px;
+        }
+        #navbar .logo {
+            font-size: 20px;
+            font-weight: 900;
+            color: #1877f2;
+            letter-spacing: -1px;
+            text-decoration: none;
+        }
+        #navbar .nav-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #navbar button {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        #btn-login-nav {
+            background-color: #1877f2;
+            color: #fff;
+        }
+        #btn-login-nav:hover { background-color: #166fe5; }
+        #btn-logout {
+            background: #e4e6eb;
+            color: #1c1e21;
+            display: none;
+        }
+        #btn-logout:hover { background: #166fe6; }
+        #nav-user-name {
+            font-weight: 600;
+            font-size: 14px;
+            display: none;
+        }
+
+        /* -- SHARED: gradient avatar base -- */
+        .gradient-avatar {
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* -- PROFILE HEADER -- */
+        #profile-section {
+            max-width: 940px;
+            margin: 0 auto;
+        }
+        .cover-photo {
+            width: 100%;
+            height: 250px;
+            background: linear-gradient(135deg, #1877f2 0%, #42b72a 100%);
+            border-radius: 0 0 8px 8px;
+            position: relative;
+        }
+        .profile-info-bar {
+            background: #fff;
+            border-radius: 0 0 8px 8px;
+            padding: 0 24px 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+            display: flex;
+            align-items: flex-end;
+            gap: 16px;
+            position: relative;
+        }
+        .avatar-wrap {
+            position: relative;
+            top: -20px;
+            flex-shrink: 0;
+        }
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border: 4px solid #fff;
+            font-size: 48px;
+        }
+        .profile-name-block {
+            flex: 1;
+            padding-bottom: 8px;
+        }
+        .profile-name-block h1 {
+            font-size: 28px;
+            font-weight: 800;
+        }
+        .profile-name-block p {
+            color: #65676b;
+            font-size: 15px;
+            margin-top: 2px;
+        }
+
+        /* -- MAIN LAYOUT --*/
+        #main-content {
+            max-width: 940px;
+            margin: 16px auto;
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 16px;
+            padding: 0 16px;
+        }
+
+        /* -- CARDS -- */
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,.1);
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .card h3 {
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+
+        /* -- ABOUT SECTION -- */
+        .about-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 0;
+            font-size: 15px;
+            color: #1c1e21;
+        }
+        .about-icon { font-size: 18px; width: 22px; text-align: center; }
+
+        /* -- POSTS -- */
+        .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .post-avatar {
+            width: 40px; height: 40px;
+            font-size: 18px; flex-shrink: 0;
+        }
+        .post-meta { flex: 1; }
+        .post-meta strong { font-size: 15px; }
+        .post-meta span { display: block; font-size: 13px; color: #65676b; }
+        .post-text { font-size: 15px; line-height: 1.5; margin-bottom: 12px; }
+        .post-image {
+            width: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+        .post-image img { width: 100%; display: block; }
+        .post-image .img-placeholder {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 64px;
+        }
+        .post-stats {
+            display: flex;
+            justify-content: space-between;
+            color: #65676b;
+            font-size: 14px;
+            padding: 8px 0;
+            border-top: 1px solid #e4e6eb;
+            border-bottom: 1px solid #e4e6eb;
+            margin-bottom: 4px;
+        }
+
+        /* -- MODAL OVERLAY -- */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.6);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 500;
+        }
+        .modal-overlay.hidden { display: none; }
+        .modal-box {
+            background: #fff; border-radius: 8px;
+            width: 100%; max-width: 432px;
+            box-shadow: 0 2px 20px rgba(0,0,0,.3);
+            overflow: hidden;
+        }
+        .modal-header {
+            padding 16px 16px 0;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-header h2 { font-size: 24px; }
+        .modal-close {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: #e4e6eb; font-size: 18px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal-body { padding: 16px; }
+        .modal p { font-size: 17px; color: #65676b; margin-bottom: 16px; }
+        .modal-body input {
+            width: 100%; padding: 14px; border: 1px solid #dddfe2;
+            border-radius: 6px; font-size: 17px; margin-bottom: 12px; outline: none;
+        }
+        .modal-body input:focus {
+            border-color: #1877f2;
+            box-shadow: 0 0 0 2px rgba(24,119,242,.2);
+        }
+        .btn-primary {
+            width: 100%; padding: 14px; background: #1877f2; color: #fff;
+            font-size: 17px; font-weight: 700; margin-bottom: 12px;
+        }
+        .btn-primary:hover {
+            background: #166fe5;
+        }
+        .btn-secondary {
+            display: block; width: fit-content; margin: 0 auto;
+            padding: 10px 24px; background: #42b72a; color: #fff; font-size: 15px;
+        }
+        .btn-secondary:hover {
+            background: #36a420;
+        }
+        .link-btn {
+            background: none; border: none; color: #1877f2;
+            font-size: 14px; cursor: pointer; text-decoration: underline;
+        }
+        .link-btn:hover { text-decoration: none }
+        .modal-alert {
+            font-size: 14px; border-radius: 4px;
+            padding 8px 12px; margin-bottom: 10px; display: none;
+        }
+        .modal-alert.error { color: #d93025; background: #fce8e6; }
+        .modal-alert.success { color: #137333; background: #e6f4ea; }
+
+        /* -- FLAG REVEAL BOX -- */
+        .flag-box {
+            background: #fff3cd; border: 2px dashed #f0ad4e;
+            border-radius: 8px; padding: 16px; text-align: center;
+            margin-top: 12px; display: none;
+        }
+        .flag-box .flag-value {
+            font-size: 22px; font-weight: 900; color: #1c1e21;
+            letter-spacing: 1px; margin-top: 4px;
+            font-family: monospace;
+        }
+
+        /* -- TOASTS --*/
+        .toast-base {
+            position: fixed; left: 50%; transform: translateX(-50%);
+            opacity: 0; transition: opacity .3s; pointer-events: none;
+        }
+        .toast-base-show { opacity: 1; }
+
+        #toast {
+            bottom: 24px;
+            background: #333; color: #fff; padding: 10px 20px;
+            border-radius: 20px; font-size: 14px; z-index: 999;
+        }
+
+        /* -- RESPONSIVE -- */
+        @media (max-width: 700px) {
+            #main-content { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav id="navbar">
+        <a class="logo" href="#">FaceBack</a>
+        <div class="nav-right">
+            <span id="nav-user-name"></span>
+            <button id="btn-login-nav" onclick="openLoginModal()">Log In</button>
+            <button id="btn-logout" onclick="logout()">Log Out</button>
+        </div>
+    </nav>
+
+    <!-- PROFILE HEADER -->
+    <div id="profile-section">
+        <div class="cover-photo"></div>
+        <div class="profile-info-bar">
+            <div class="avatar-wrap">
+                <div class="avatar gradient-avatar avatar">🐶</div>
+            </div>
+            <div class="profile-name-block">
+                <h1>Jill Smith</h1>
+                <p>321 friends</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main-content">
+        <!-- LEFT COLUMN -->
+        <div id="left-col">
+            <!-- ABOUT CARD -->
+            <div class="card">
+                <h3>About</h3>
+                <div class="about-row"><span class="about-icon">📍</span> Lives in Chicago, IL</div>
+                <div class="about-row"><span class="about-icon">🎓</span> Studied at Ridgecrest University</div>
+                <div class="about-row"><span class="about-icon">💼</span> Software Developer at C1</div>
+                <div class="about-row"><span class="about-icon">📧</span> jill.smith@email.com</div>
+                <div class="about-row"><span class="about-icon">📱</span> (111) 111-1111 </div>
+                <div class="about-row"><span class="about-icon">🏠</span> 77 W Wacker St, Chicago, IL 60601</div>
+                <div class="about-row"><span class="about-icon">🎂</span> March 14, 1995</div>
+            </div>
+        </div>
+        <div id="right-col"></div>
+    </div>
+
+    <!-- MODAL: LOGIN-->
+    <div class="modal-overlay hidden" id="modal-login">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>Log in to FaceBack</h2>
+                <button class="modal-close" onclick="closeModal('modal-login')">🗙</button>
+            </div>
+            <div class="modal-body">
+                <p>Connect with friends and share moments.</p>
+                <div class="modal-alert error" id="login-error"></div>
+                <input type="email" id="login-email" placeholder="Email address" autocomplete="email" />
+                <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" />
+                <button class="btn btn-primary" onclick="attemptLogin()">Log In</button>
+                <div style="text-align:center">
+                    <button class="link-btn" onclick="openForgotFlow()">Forgot password?</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: FORGOT PASSWORD - STEP 1 FIND ACCOUNT -->
+    <div class="modal-overlay hidden" id="modal-forgot-1">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>Find Your Account</h2>
+                <button class="modal-close" onclick="closeModal('modal-forgot-1')">🗙</button>
+            </div>
+            <div class="modal-body">
+                <p>Enter the email address associated with your account.</p>
+                <div class="modal-alert error" id="forgot1-error"></div>
+                <input type="email" id="forgot-email" placeholder="Email address" />
+                <button class="btn btn-primary" onclick="findAccount()">Search</button>
+                <div style="text-align:center">
+                    <button class="link-btn" onclick="openLoginModal()">Back to login</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: FORGOT PASSWORD - STEP 2 SECURITY QUESTION -->
+    <div class="modal-overlay hidden" id="modal-forgot-2">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>Verify Your Identity</h2>
+                <button class="modal-close" onclick="closeModal('modal-forgot-2')">🗙</button>
+            </div>
+            <div class="modal-body">
+                <p>Please answer your security question to reset your password.</p>
+                <div style="background:#f0f2f5;border-radius:8px;padding:12px;margin-bottom:16px;">
+                    <div style="font-size:13px;color:#65676b;margin-bottom:4px;">Security question</div>
+                    <div style="font-size:16px;font-weight:600;">What is the name of your first pet?</div>
+                </div>
+                <div class="modal-alert-error" id="forgot2-error"></div>
+                <input type="text" id="security-answer" placeholder="Your answer" autocomplete="off" />
+                <button class="btn btn-primary" onclick="checkSecurityAnswer()">Verify</button>
+                <div style="text-align:center">
+                    <button class="link-btn" onclick="closeModal('modal-forgot-2');openModal('modal-forgot-1')">Back</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: FORGOT PASSWORD - STEP 3 NEW PASSWORD -->
+    <div class="modal-overlay hidden" id="modal-forgot-3">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>Password Reset Successful</h2>
+                <button class="modal-close" onclick="closeModal('modal-forgot-3')">🗙</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-alert success" id="forgot3-success" style="display:block">
+                    Your identity has been verified. A temporary password has been generated for your account.
+                </div>
+                <div style="background:#f0f2f5;border-radius:8px;padding:16px;margin-bottom:16px;text-align:center;">
+                    <div style="font-size:13px;color:#65676b;margin-bottom:6px;">Your temporary new password is:</div>
+                    <div style="font-size:24px;font-weight:900;font-family:monospace;letter-spacing:2px;color:#1c1e21;" id="temp-text-display"></div>
+                    <div style="font-size:12px;color:#65676b;margin-top:6px;">Copy this password and use it to log in.</div>
+                </div>
+                <button class="btn btn-primary" onclick="closeModal('forgot3-success');openLoginModal()">Use This Password to Log In</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast-base"></div>
+
+    <script src="posts.js"></script>
+    <script>
+        const ACCOUNT = {
+            _e: 'TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQuamlsbC5zbWl0aEBlbWFpbC5jb20=',
+            _p: 'TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQuc2djdGZ7d2gwJF9AX2dvMGRfZG85fQ== ',
+            _s: 'TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQuc3B1ZA==',
+            get e() { return atob(this._e ).split('.').slice(1).join('.'); },
+            get p() { return atob(this._p).split('.').slice(1).join('.'); },
+            get s() { return atob(this._s).split('.').slice(1).join('.'); }
+        };
+
+        const FORGOT_MODALS = ['modal-forgot-1', 'modal-forgot-2', 'modal-forgot-3'];
+
+        let isLoggedIn = false;
+        const elLoginNav = document.getElementById('btn-login-nav');
+        const elLogout = document.getElementById('btn-logout');
+        const elNavName = document.getElementById('nav-user-name');
+        const elLoginEmail = document.getElementById('login-email');
+        const elLoginPassword = document.getElementById('login-password');
+
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            clearErrors();
+        }
+
+        function clearErrors() {
+            document.querySelectorAll('.modal-alert').forEach(el => {
+                el.style.display = 'none';
+                el.textContent = '';
+            });
+        }
+        function showError(id, message) {
+            const el = document.getElementById(id);
+            el.textContent = message;
+            el.style.display = 'block';
+        }
+
+        function showToast(message, duration = 3000) {
+            const el = document.getElementById('toast');
+            el.textContent = message;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), duration);
+        }
+
+        function updateNavState() {
+            elLoginNav.style.display = isLoggedIn ? 'none' : 'inline-block';
+            elLogout.style.display = isLoggedIn ? 'inline-block' : 'none';
+            elNavName.style.display = isLoggedIn ? 'inline' : 'none';
+        }
+
+        function openLoginModal() {
+            FORGOT_MODALS.forEach(modalId => closeModal(modalId));
+            elLoginEmail.value = '';
+            elLoginPassword.value = '';
+            openModal('modal-login');
+        }
+
+        function attemptLogin() {
+            const email = elLoginEmail.value.trim().toLowerCase();
+            const password = elLoginPassword.value;
+            if (!email || !password) { showError('login-error', 'Please fill in all fields.'); return; }
+            if (email == ACCOUNT.e && password == ACCOUNT.p) {
+                isLoggedIn = true;
+                closeModal('modal-login');
+                elNavName.textContent = 'Jill';
+                updateNavState();
+                showToast('Logged in successfully!');
+            } else {
+                showError('login-error', 'Incorrect email or password.');
+            }
+        }
+
+        function logout() {
+            isLoggedIn = false;
+            updateNavState();
+            showToast('You have been logged out.');
+        }
+
+        function openForgotFlow() {
+            closeModal('modal-login');
+            document.getElementById('forgot-email').value = '';
+            openModal('modal-forgot-1');
+        }
+
+        function findAccount() {
+            const email = document.getElementById('forgot-email').value.trim().toLowerCase();
+            if (!email) {
+                showError('forgot1-error', 'Please enter your email address.'); return;
+            }
+            if (email !== ACCOUNT.e) {
+                showError('forgot1-error', 'No account found with the email address.'); return;
+            }
+            closeModal('modal-forgot-1');
+            document.getElementById('security-answer').value = '';
+            openModal('modal-forgot-2');
+        }
+
+        function checkSecurityAnswer() {
+            const answer = document.getElementById('security-answer').value.trim().toLowerCase();
+            if (!answer) { showError('forgot2-error', 'Please enter your answer.'); return; }
+            if (answer !== ACCOUNT.s) { showError('forgot2-error', 'Incorrect answer.'); return; }
+            closeModal('modal-forgot-2');
+            const p = ACCOUNT.p;
+            document.getElementById('temp-text-display').textContent = ACCOUNT.p;
+            openModal('modal-forgot-3');
+        }
+
+        const modalIds = ['modal-login', ...FORGOT_MODALS];
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                if (!document.getElementById('modal-login').classList.contains('hidden')) attemptLogin();
+                else if (!document.getElementById('modal-forgot-1').classList.contains('hidden')) findAccount();
+                else if (!document.getElementById('modal-forgot-2').classList.contains('hidden')) checkSecurityAnswer();
+            }
+            if (e.key === 'Escape') modalIds.forEach(closeModal);
+        });
+    </script>
+</body>
+</html>
