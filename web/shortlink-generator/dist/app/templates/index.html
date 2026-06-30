@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Short-link Generator</title>
+  <style>
+    body { font-family: -apple-system, system-ui, sans-serif; max-width: 720px;
+           margin: 4em auto; padding: 0 1em; color: #222; }
+    h1 { font-weight: 600; }
+    .tag { color: #888; font-size: 0.9em; }
+    form { margin: 2em 0; display: flex; gap: 0.5em; }
+    input[type=url] { flex: 1; padding: 0.6em; font-size: 1em;
+                      border: 1px solid #ccc; border-radius: 4px; }
+    button { padding: 0.6em 1.2em; font-size: 1em; border: 0;
+             background: #2b6cb0; color: white; border-radius: 4px;
+             cursor: pointer; }
+    button:hover { background: #2c5282; }
+    .result { background: #f7fafc; border: 1px solid #e2e8f0;
+              border-radius: 6px; padding: 1em; }
+    .result a { word-break: break-all; }
+    .preview { margin-top: 1em; max-width: 100%; border: 1px solid #ddd; }
+    .error { color: #c53030; background: #fff5f5; padding: 0.7em;
+             border: 1px solid #feb2b2; border-radius: 4px; }
+    footer { margin-top: 4em; color: #aaa; font-size: 0.85em; }
+  </style>
+</head>
+<body>
+  <h1>Short-link Generator</h1>
+  <p class="tag">Shorten a link. We even snap a thumbnail so embeds in
+     Twitter, Discord, and Slack render with a nice preview.</p>
+
+  <form action="/shorten" method="post">
+    <input type="url" name="url" placeholder="https://your-very-long-url.example.com/path" required>
+    <button type="submit">Shorten</button>
+  </form>
+
+  {% if error %}
+    <div class="error">{{ error }}</div>
+  {% endif %}
+
+  {% if short_url %}
+    <div class="result">
+      <strong>Short link:</strong>
+      <a href="{{ short_url }}">{{ short_url }}</a><br>
+      <span class="tag">redirects to {{ original }}</span>
+      {% if preview_url %}
+        <div><img class="preview" src="{{ preview_url }}" alt="preview"></div>
+      {% else %}
+        <p class="tag">(preview unavailable for this URL)</p>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <footer>
+    Short-link Generator v0.3 &middot; powered by Flask + wkhtmltoimage
+  </footer>
+</body>
+</html>
