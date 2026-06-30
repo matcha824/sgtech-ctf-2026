@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZeroDay Credit Union</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!--
+    Internal QA Testing Account
+
+    username: guest
+    password: ride_the_lightning
+  -->
+
+  <main class="shell">
+    <section class="brand-card">
+      <div class="brand-mark">ZD</div>
+      <div>
+        <h1>ZeroDay Credit Union</h1>
+        <p>Secure digital banking for the modern professional.</p>
+      </div>
+    </section>
+
+    <section id="login-view" class="panel">
+      <h2>Member Sign In</h2>
+      <p class="muted">Access your accounts using your member credentials.</p>
+      <form id="login-form">
+        <label for="username">Username</label>
+        <input id="username" name="username" autocomplete="username" required />
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required />
+
+        <button type="submit">Sign In</button>
+      </form>
+      <p id="login-message" class="message" aria-live="polite"></p>
+    </section>
+
+    <section id="dashboard-view" class="panel hidden"></section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

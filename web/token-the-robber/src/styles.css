@@ -1,0 +1,262 @@
+:root {
+  --bg: #071019;
+  --panel: #101d2a;
+  --panel-2: #142538;
+  --text: #eef6ff;
+  --muted: #97a9bc;
+  --accent: #62d6ff;
+  --accent-2: #90ffcf;
+  --danger: #ff7777;
+  --border: rgba(255, 255, 255, 0.11);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(98, 214, 255, 0.18), transparent 30rem),
+    radial-gradient(circle at bottom right, rgba(144, 255, 207, 0.12), transparent 26rem),
+    var(--bg);
+}
+
+.shell {
+  width: min(1060px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 48px 0;
+}
+
+.brand-card,
+.panel,
+.account-card,
+.content-card,
+.notice {
+  border: 1px solid var(--border);
+  background: rgba(16, 29, 42, 0.88);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(14px);
+  border-radius: 24px;
+}
+
+.brand-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.brand-mark {
+  width: 62px;
+  height: 62px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  color: #031018;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  font-weight: 900;
+  letter-spacing: -0.08em;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 4px;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  letter-spacing: -0.07em;
+}
+
+h2 {
+  margin-bottom: 8px;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  letter-spacing: -0.04em;
+}
+
+h3 {
+  margin-bottom: 14px;
+}
+
+.muted,
+.brand-card p,
+.footer-note {
+  color: var(--muted);
+}
+
+.panel {
+  padding: 28px;
+}
+
+.hidden {
+  display: none;
+}
+
+form {
+  display: grid;
+  gap: 12px;
+  max-width: 420px;
+  margin-top: 22px;
+}
+
+label {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 15px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.055);
+  outline: none;
+}
+
+input:focus {
+  border-color: rgba(98, 214, 255, 0.8);
+}
+
+button {
+  border: 0;
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-top: 8px;
+  cursor: pointer;
+  color: #031018;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  font-weight: 800;
+}
+
+button.secondary {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid var(--border);
+}
+
+.message {
+  min-height: 24px;
+  color: var(--danger);
+  margin-top: 16px;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.eyebrow {
+  color: var(--accent-2);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.78rem;
+  margin-bottom: 8px;
+  font-weight: 800;
+}
+
+.account-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.account-card {
+  padding: 20px;
+  background: rgba(20, 37, 56, 0.82);
+}
+
+.account-card span,
+.account-card small {
+  display: block;
+  color: var(--muted);
+}
+
+.account-card strong {
+  display: block;
+  margin: 10px 0 8px;
+  font-size: 1.65rem;
+  letter-spacing: -0.04em;
+}
+
+.notice {
+  padding: 20px;
+  margin-bottom: 18px;
+  border-color: rgba(144, 255, 207, 0.22);
+}
+
+.notice p {
+  color: var(--muted);
+  margin-bottom: 0;
+}
+
+.content-card {
+  padding: 22px;
+}
+
+.transactions {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.transactions li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.transactions li:last-child {
+  border-bottom: 0;
+}
+
+.executive-note code {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 13px 14px;
+  border-radius: 13px;
+  color: var(--accent-2);
+  background: rgba(0, 0, 0, 0.27);
+  border: 1px solid var(--border);
+}
+
+.flag-label {
+  margin-top: 18px;
+  margin-bottom: 6px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.footer-note {
+  margin-top: 24px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+  .brand-card,
+  .dashboard-header {
+    flex-direction: column;
+  }
+
+  button.secondary {
+    width: 100%;
+  }
+}

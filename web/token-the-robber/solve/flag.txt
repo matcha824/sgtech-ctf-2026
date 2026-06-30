@@ -1,0 +1,1 @@
+sgctf{gabriel_winter_needs_a_better_jwt_secret}
